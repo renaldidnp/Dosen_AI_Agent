@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql" // ganti ke "mysql" kalau pakai MySQL
+  url      = env("DATABASE_URL")
+}
+
+model Dosen {
+  id        String   @id @default(cuid())
+  nama      String
+  email     String   @unique
+  password  String
+  soal      Soal[]
+  createdAt DateTime @default(now())
+}
+
+model Soal {
+  id             String   @id @default(cuid())
+  judul          String
+  deskripsi      String?
+  dosenId        String
+  dosen          Dosen    @relation(fields: [dosenId], references: [id])
+
+  googleFormId   String?  // ID Google Form yang dipakai untuk soal ini
+  googleFormUrl  String?
+  driveFolderId  String?  // folder Drive tujuan jawaban soal ini
+
+  indikator      Indikator[]
+  submission     Submission[]
+
+  createdAt      DateTime @default(now())
+}
+
+model Indikator {
+  id        String   @id @default(cuid())
+  soalId    String
+  soal      Soal     @relation(fields: [soalId], references: [id])
+  nama      String   // contoh: "Ketepatan Konsep"
+  bobot     Float    // persen, total semua indikator per soal harus 100
+  rubrik    String   // deskripsi kriteria penilaian
+  skorMax   Float    @default(100)
+}
+
+model Submission {
+  id              String   @id @default(cuid())
+  soalId          String
+  soal            Soal     @relation(fields: [soalId], references: [id])
+
+  namaMahasiswa   String
+  nim             String
+  emailMahasiswa  String
+
+  driveFileId     String   // file_id dari Google Drive
+  driveFileUrl    String
+  formResponseId  String?  @unique // ID respons dari Google Form, cegah duplikat
+
+  status          String   @default("diterima") // diterima | diproses | selesai | gagal
+
+  hasilKoreksi    HasilKoreksi?
+
+  createdAt       DateTime @default(now())
+}
+
+model HasilKoreksi {
+  id              String   @id @default(cuid())
+  submissionId    String   @unique
+  submission      Submission @relation(fields: [submissionId], references: [id])
+
+  skorTotal       Float
+  skorPerIndikator Json    // [{ indikatorId, nama, skor, catatan }]
+  feedback        String
+
+  emailTerkirim   Boolean  @default(false)
+  createdAt       DateTime @default(now())
+}

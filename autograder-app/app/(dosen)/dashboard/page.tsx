@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import Link from "next/link";
+import SoalGrid from "./soal-grid";
 
 export default async function DashboardPage() {
   const soalList = await db.soal.findMany({
@@ -91,7 +92,6 @@ export default async function DashboardPage() {
 
       {/* Content Section */}
       {soalList.length === 0 ? (
-        /* Empty State */
         <div className="bg-white border border-slate-200 border-dashed rounded-xl p-12 flex flex-col items-center justify-center text-center mt-8">
           <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 mb-4">
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -108,61 +108,7 @@ export default async function DashboardPage() {
           </Link>
         </div>
       ) : (
-        /* Card Grid List */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {soalList.map((soal) => (
-            <div key={soal.id} className="bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-300 flex flex-col group relative overflow-hidden hover:-translate-y-1">
-              <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 group-hover:w-1.5 transition-all"></div>
-
-              <div className="flex justify-between items-start mb-3 md:mb-4">
-                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide uppercase bg-blue-50 text-blue-700 border border-blue-100">Aktif</span>
-                <button className="text-slate-400 hover:text-slate-600 transition-colors p-1 -mr-1 rounded-full hover:bg-slate-50">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                  </svg>
-                </button>
-              </div>
-
-              <h2 className="text-lg font-semibold text-slate-800 mb-3 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">{soal.judul}</h2>
-
-              <div className="flex flex-col gap-3 text-sm text-slate-500 mb-6">
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span>
-                    Dibuat:{" "}
-                    {"createdAt" in soal && soal.createdAt
-                      ? new Date(soal.createdAt).toLocaleDateString("id-ID", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })
-                      : "-"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-600 font-medium bg-slate-50 px-2.5 py-1 rounded-md w-fit text-xs">
-                  <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                  <span>{soal.submission?.length || 0} Submissions</span>
-                </div>
-              </div>
-
-              <div className="mt-auto pt-4 border-t border-slate-100 flex justify-end">
-                <Link
-                  href={`/output/${soal.id}/daftar-submission`}
-                  className="inline-flex items-center justify-center px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-sm font-medium gap-1.5 transition-all w-full sm:w-auto"
-                >
-                  Lihat hasil
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
+        <SoalGrid initialSoalList={soalList} />
       )}
     </div>
   );

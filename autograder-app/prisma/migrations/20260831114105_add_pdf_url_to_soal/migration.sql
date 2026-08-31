@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `soal` ADD COLUMN `pdfDriveFileId` VARCHAR(191) NULL,
+    ADD COLUMN `pdfUrl` VARCHAR(191) NULL;

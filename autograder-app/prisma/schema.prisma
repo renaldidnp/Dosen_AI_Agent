@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql" // ganti ke "mysql" kalau pakai MySQL
+  provider = "mysql" 
   url      = env("DATABASE_URL")
 }
 
@@ -16,16 +16,49 @@ model Dosen {
   createdAt DateTime @default(now())
 }
 
+model Mahasiswa {
+  id        String   @id @default(cuid())
+  nama      String
+  nim       String
+  email     String
+  kelasId   String
+  kelas     Kelas    @relation(fields: [kelasId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([nim, kelasId])
+}
+
+model Kelas {
+  id            String   @id @default(cuid())
+  nama          String   // contoh: "TI-A", "SI-Malam"
+  angkatan      String   // contoh: "2022"
+  driveFolderId String?  // cache: ID folder Drive untuk kelas ini (di dalam folder angkatan)
+
+  mahasiswa     Mahasiswa[]
+  soal          Soal[]
+
+  createdAt     DateTime @default(now())
+
+  @@unique([nama, angkatan])
+}
+
 model Soal {
   id             String   @id @default(cuid())
   judul          String
-  deskripsi      String?
+  deskripsi      String?  @db.Text
   dosenId        String
   dosen          Dosen    @relation(fields: [dosenId], references: [id])
 
-  googleFormId   String?  // ID Google Form yang dipakai untuk soal ini
+  kelasId        String?           // ← baru, opsional (soal lama belum ada kelas)
+  kelas          Kelas?   @relation(fields: [kelasId], references: [id])  // ← baru
+
+  googleFormId   String?
   googleFormUrl  String?
-  driveFolderId  String?  // folder Drive tujuan jawaban soal ini
+  driveFolderId  String?
+
+  pdfUrl         String?
+  pdfDriveFileId String?
 
   indikator      Indikator[]
   submission     Submission[]
@@ -37,9 +70,9 @@ model Indikator {
   id        String   @id @default(cuid())
   soalId    String
   soal      Soal     @relation(fields: [soalId], references: [id])
-  nama      String   // contoh: "Ketepatan Konsep"
-  bobot     Float    // persen, total semua indikator per soal harus 100
-  rubrik    String   // deskripsi kriteria penilaian
+  nama      String
+  bobot     Float
+  rubrik    String   @db.Text          
   skorMax   Float    @default(100)
 }
 
@@ -74,4 +107,9 @@ model HasilKoreksi {
 
   emailTerkirim   Boolean  @default(false)
   createdAt       DateTime @default(now())
+}
+
+model AppSetting {
+  key   String @id
+  value String
 }

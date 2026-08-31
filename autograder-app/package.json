@@ -10,14 +10,17 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "googleapis": "^176.0.0",
     "lucide-react": "^1.34.0",
     "next": "14.2.35",
+    "pdfkit": "^0.20.2",
     "react": "^18",
     "react-dom": "^18",
     "resend": "^6.22.1"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/pdfkit": "^0.17.6",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.20",

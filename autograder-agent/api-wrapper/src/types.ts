@@ -32,3 +32,33 @@ export type GradingResult = {
   skorPerIndikator: HasilIndikatorFinal[];
   feedback: string;
 };
+
+// === Tipe untuk generate soal (AI Assistant di form Buat Soal) ===
+
+export type ChatHistoryItem = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export type GenerateSoalRequest = {
+  prompt: string;
+  history: ChatHistoryItem[];
+};
+
+export type IndikatorDraft = {
+  nama: string;
+  bobot: number;
+  rubrik: string;
+  skorMax: number;
+};
+
+export type SoalDraftResult = {
+  judul: string;
+  deskripsi: string;
+  indikator: IndikatorDraft[];
+};
+
+export type GenerateSoalResponse = {
+  reply: string;
+  draft: SoalDraftResult;
+};

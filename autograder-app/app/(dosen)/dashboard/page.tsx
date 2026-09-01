@@ -1,8 +1,8 @@
-export const dynamic = "force-dynamic";
-
 import { db } from "@/lib/db";
 import Link from "next/link";
 import SoalGrid from "./soal-grid";
+import RealTimeLog from "@/components/RealTimeLog";
+import { Plus, Database, Users, FolderOpen } from "lucide-react";
 
 export default async function DashboardPage() {
   const soalList = await db.soal.findMany({
@@ -14,104 +14,86 @@ export default async function DashboardPage() {
   const totalSubmissions = soalList.reduce((acc, soal) => acc + (soal.submission?.length || 0), 0);
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight mb-1">Dashboard Dosen</h1>
-          <p className="text-sm text-slate-500">Kelola ujian dan pertanyaan untuk mata kuliah Anda.</p>
-        </div>
-        <Link
-          href="/soal/create"
-          className="bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-5 rounded-lg text-sm font-medium shadow-sm transition-all flex items-center justify-center gap-2 w-full sm:w-fit hover:shadow-md hover:-translate-y-0.5"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Buat Soal Baru
-        </Link>
-      </div>
-
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
+    <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 pb-12">
+      {/* Top Metrics (Bento Row) */}
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Hero / title card */}
+        <div className="relative overflow-hidden bg-[#111118]/70 backdrop-blur-xl border border-[#00f0ff]/10 rounded-[4px] p-6 flex flex-col justify-between border-l-4 border-l-[#00f0ff] md:col-span-2">
           <div>
-            <p className="text-sm font-medium text-slate-500 mb-1">Total Soal</p>
-            <p className="text-2xl font-bold text-slate-800">{totalSoal}</p>
+            <div className="font-mono text-[11px] text-[#00f0ff] mb-1 tracking-widest uppercase flex items-center gap-2">
+              <span className="w-1.5 h-1.5 bg-[#00f0ff] rounded-[2px]" style={{ boxShadow: "0 0 8px rgba(0,240,255,1)" }} />
+              Nexus Command Center
+            </div>
+            <h1 className="font-semibold text-[28px] text-white leading-tight mt-2 tracking-tight">
+              Dashboard <span className="text-[#00f0ff]" style={{ textShadow: "0 0 10px rgba(0,240,255,0.5)" }}>Dosen_</span>
+            </h1>
+            <p className="text-sm text-[#8b949e] mt-1">Kelola ujian dan pertanyaan untuk mata kuliah Anda.</p>
+          </div>
+          <div className="mt-4">
+            <Link
+              href="/soal/create"
+              className="inline-flex items-center gap-2 bg-[#00f0ff]/10 border border-[#00f0ff] text-[#00f0ff] font-mono text-xs px-4 py-2 rounded-[2px] uppercase tracking-wider hover:bg-[#00f0ff]/20 transition-all hover:shadow-[0_0_10px_rgba(0,240,255,0.3)]"
+            >
+              <Plus className="w-4 h-4" />
+              Buat Soal Baru
+            </Link>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-500 mb-1">Total Submissions</p>
-            <p className="text-2xl font-bold text-slate-800">{totalSubmissions}</p>
+        {/* Metric: Total Soal */}
+        <div className="bg-gradient-to-b from-[#1c1c28]/80 to-[#111118]/90 border border-[#00f0ff]/15 rounded-[4px] p-5 flex flex-col justify-between group hover:border-[#00f0ff]/50 transition-colors relative before:content-[''] before:absolute before:top-[-1px] before:left-[-1px] before:w-2 before:h-2 before:border-t-2 before:border-l-2 before:border-[#00f0ff]/70 after:content-[''] after:absolute after:bottom-[-1px] after:right-[-1px] after:w-2 after:h-2 after:border-b-2 after:border-r-2 after:border-[#00f0ff]/70">
+          <div className="flex justify-between items-start">
+            <div className="flex flex-col">
+              <span className="font-mono text-[10px] text-[#8b949e] uppercase tracking-widest">Total Soal // DB_Count</span>
+              <span className="text-3xl font-semibold text-white mt-2 group-hover:text-[#00f0ff] transition-colors">{totalSoal}</span>
+            </div>
+            <Database className="w-5 h-5 text-[#00f0ff]/50" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-500 mb-1">Ujian Aktif</p>
-            <p className="text-2xl font-bold text-slate-800">{totalSoal}</p>
+        {/* Metric: Total Submissions */}
+        <div className="bg-gradient-to-b from-[#1c1c28]/80 to-[#111118]/90 border border-[#00f0ff]/15 rounded-[4px] p-5 flex flex-col justify-between group hover:border-[#cf5cff]/50 transition-colors relative before:content-[''] before:absolute before:top-[-1px] before:left-[-1px] before:w-2 before:h-2 before:border-t-2 before:border-l-2 before:border-[#00f0ff]/70 after:content-[''] after:absolute after:bottom-[-1px] after:right-[-1px] after:w-2 after:h-2 after:border-b-2 after:border-r-2 after:border-[#00f0ff]/70">
+          <div className="flex justify-between items-start">
+            <div className="flex flex-col">
+              <span className="font-mono text-[10px] text-[#8b949e] uppercase tracking-widest">Submissions // Intake</span>
+              <span className="text-3xl font-semibold text-white mt-2 group-hover:text-[#ecb2ff] transition-colors">{totalSubmissions}</span>
+            </div>
+            <Users className="w-5 h-5 text-[#cf5cff]/50" />
           </div>
         </div>
+      </section>
+
+      {/* Content: modul soal + real-time log */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4 items-start">
+        {soalList.length === 0 ? (
+          <div className="bg-[#111118]/50 border border-[#00f0ff]/10 border-dashed rounded-[4px] p-12 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 bg-[#00f0ff]/5 border border-[#00f0ff]/20 rounded-[4px] flex items-center justify-center text-[#00f0ff]/60 mb-4">
+              <FolderOpen className="w-7 h-7" />
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">Belum ada soal ujian</h3>
+            <p className="text-[#8b949e] max-w-sm mb-6 text-sm">Mulai buat ujian atau kuis pertama Anda untuk membagikannya kepada mahasiswa.</p>
+            <Link
+              href="/soal/create"
+              className="inline-flex items-center gap-2 bg-[#00f0ff]/10 border border-[#00f0ff] text-[#00f0ff] font-mono text-xs px-4 py-2 rounded-[2px] uppercase tracking-wider hover:bg-[#00f0ff]/20 transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              Buat Soal Pertama
+            </Link>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-between items-center border-b border-white/5 pb-2">
+              <h2 className="font-mono text-sm text-[#00f0ff] uppercase tracking-widest flex items-center gap-2">
+                <FolderOpen className="w-4 h-4" />
+                Active Modules
+              </h2>
+            </div>
+            <SoalGrid initialSoalList={soalList} />
+          </div>
+        )}
+
+        <RealTimeLog />
       </div>
-
-      {/* Search & Filter Bar */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6 justify-between items-center bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-        <div className="relative w-full md:w-96">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          <input
-            type="text"
-            placeholder="Cari soal atau ujian..."
-            className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm bg-slate-50 text-slate-800 placeholder-slate-400"
-          />
-        </div>
-        <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-          <button className="px-4 py-1.5 rounded-full text-sm font-medium bg-slate-800 text-white whitespace-nowrap">Semua</button>
-          <button className="px-4 py-1.5 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 whitespace-nowrap">Aktif</button>
-          <button className="px-4 py-1.5 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 whitespace-nowrap">Draft</button>
-        </div>
-      </div>
-
-      {/* Content Section */}
-      {soalList.length === 0 ? (
-        <div className="bg-white border border-slate-200 border-dashed rounded-xl p-12 flex flex-col items-center justify-center text-center mt-8">
-          <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 mb-4">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-slate-800 mb-2">Belum ada soal ujian</h3>
-          <p className="text-slate-500 max-w-sm mb-6 text-sm">Mulai buat ujian atau kuis pertama Anda untuk membagikannya kepada mahasiswa.</p>
-          <Link href="/soal/create" className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium flex items-center gap-2 transition-all shadow-sm">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Buat Soal Pertama
-          </Link>
-        </div>
-      ) : (
-        <SoalGrid initialSoalList={soalList} />
-      )}
     </div>
   );
 }

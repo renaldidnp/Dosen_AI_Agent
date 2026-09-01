@@ -8,7 +8,7 @@ type IndikatorInput = { nama: string; bobot: number; rubrik: string; skorMax: nu
 type ChatRole = "user" | "assistant";
 type SoalDraft = { judul?: string; deskripsi?: string; indikator?: Partial<IndikatorInput>[] };
 type ChatMessage = { id: string; role: ChatRole; content: string; draft?: SoalDraft };
-type KelasOption = { id: string; nama: string; angkatan: string };
+type Kelas = { id: string; nama: string; angkatan: string };
 
 const emptyIndikator = (): IndikatorInput => ({ nama: "", bobot: 0, rubrik: "", skorMax: 100 });
 
@@ -20,10 +20,11 @@ export default function CreateSoalPage() {
   const [indikator, setIndikator] = useState<IndikatorInput[]>([emptyIndikator()]);
   const [saving, setSaving] = useState(false);
 
-  // Daftar kelas untuk dropdown, diambil dari GET /api/kelas
-  const [kelasList, setKelasList] = useState<KelasOption[]>([]);
-  const [kelasId, setKelasId] = useState<string>("");
+  // Kelas & mata kuliah
+  const [kelasList, setKelasList] = useState<Kelas[]>([]);
   const [loadingKelas, setLoadingKelas] = useState(true);
+  const [kelasId, setKelasId] = useState("");
+  const [mataKuliah, setMataKuliah] = useState("");
 
   // State khusus untuk tombol dan penanganan draf postingan
   const [isDraftApplied, setIsDraftApplied] = useState(false);
@@ -45,15 +46,10 @@ export default function CreateSoalPage() {
 
   useEffect(() => {
     async function loadKelas() {
+      setLoadingKelas(true);
       try {
         const res = await fetch("/api/kelas");
-        if (res.ok) {
-          const data: KelasOption[] = await res.json();
-          setKelasList(data);
-        }
-      } catch {
-        // Gagal load daftar kelas tidak boleh menghalangi user tetap bisa buat soal
-        // (kelasId cukup dibiarkan kosong / opsional)
+        if (res.ok) setKelasList(await res.json());
       } finally {
         setLoadingKelas(false);
       }
@@ -87,11 +83,14 @@ export default function CreateSoalPage() {
           googleFormUrl,
           dosenId: "clx1abc123realid",
           kelasId: kelasId || null,
+          mataKuliah: mataKuliah.trim() || null,
           indikator,
         }),
       });
-      if (res.ok) router.refresh();
-      router.push("/dashboard");
+      if (res.ok) {
+        router.refresh();
+        router.push("/dashboard");
+      }
     } finally {
       setSaving(false);
     }
@@ -173,6 +172,42 @@ export default function CreateSoalPage() {
                 {isDraftApplied && <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">Draf Posting Aktif</span>}
               </div>
               <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Kelas</label>
+                    <select
+                      className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 disabled:bg-slate-50 disabled:text-slate-400"
+                      value={kelasId}
+                      onChange={(e) => setKelasId(e.target.value)}
+                      disabled={loadingKelas}
+                    >
+                      <option value="">{loadingKelas ? "Memuat kelas..." : kelasList.length === 0 ? "Belum ada kelas" : "Pilih kelas (opsional)"}</option>
+                      {kelasList.map((k) => (
+                        <option key={k.id} value={k.id}>
+                          {k.nama} — Angkatan {k.angkatan}
+                        </option>
+                      ))}
+                    </select>
+                    {!loadingKelas && kelasList.length === 0 && (
+                      <p className="mt-1 text-xs text-slate-400">
+                        Belum ada kelas terdaftar. Tambahkan dulu di halaman{" "}
+                        <a href="/kelas" className="text-indigo-600 hover:underline">
+                          Kelas
+                        </a>
+                        .
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Mata Kuliah</label>
+                    <input
+                      className="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                      placeholder="Contoh: Algoritma dan Struktur Data"
+                      value={mataKuliah}
+                      onChange={(e) => setMataKuliah(e.target.value)}
+                    />
+                  </div>
+                </div>
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-slate-700">Judul soal</label>
                   <input
@@ -181,23 +216,6 @@ export default function CreateSoalPage() {
                     value={judul}
                     onChange={(e) => setJudul(e.target.value)}
                   />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">Kelas</label>
-                  <select
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
-                    value={kelasId}
-                    onChange={(e) => setKelasId(e.target.value)}
-                    disabled={loadingKelas}
-                  >
-                    <option value="">{loadingKelas ? "Memuat daftar kelas..." : "Tanpa kelas (opsional)"}</option>
-                    {kelasList.map((k) => (
-                      <option key={k.id} value={k.id}>
-                        {k.angkatan} — {k.nama}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="mt-1.5 text-xs text-slate-400">Menentukan folder penyimpanan PDF soal di Google Drive: angkatan/kelas.</p>
                 </div>
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-slate-700">Deskripsi soal</label>

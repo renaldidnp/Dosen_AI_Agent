@@ -53,6 +53,8 @@ model Soal {
   kelasId        String?           // ← baru, opsional (soal lama belum ada kelas)
   kelas          Kelas?   @relation(fields: [kelasId], references: [id])  // ← baru
 
+  mataKuliah     String?
+
   googleFormId   String?
   googleFormUrl  String?
   driveFolderId  String?

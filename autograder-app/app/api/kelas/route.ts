@@ -12,21 +12,21 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { nama, angkatan } = body;
 
-  if (!nama || !angkatan) {
-    return NextResponse.json({ error: "nama dan angkatan wajib diisi" }, { status: 400 });
+  if (!nama?.trim() || !angkatan?.trim()) {
+    return NextResponse.json({ error: "Nama kelas dan angkatan wajib diisi." }, { status: 400 });
   }
 
   try {
     const kelas = await db.kelas.create({
-      data: { nama, angkatan },
+      data: { nama: nama.trim(), angkatan: angkatan.trim() },
     });
     return NextResponse.json(kelas, { status: 201 });
   } catch (err: any) {
-    // Kombinasi nama+angkatan sudah ada (constraint @@unique([nama, angkatan]))
+    // Kena unique constraint [nama, angkatan]
     if (err?.code === "P2002") {
-      return NextResponse.json({ error: "Kelas dengan nama dan angkatan ini sudah ada" }, { status: 409 });
+      return NextResponse.json({ error: `Kelas "${nama}" untuk angkatan ${angkatan} sudah ada.` }, { status: 409 });
     }
     console.error("Gagal membuat kelas:", err);
-    return NextResponse.json({ error: "Gagal membuat kelas" }, { status: 500 });
+    return NextResponse.json({ error: "Gagal membuat kelas." }, { status: 500 });
   }
 }

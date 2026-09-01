@@ -13,7 +13,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { judul, deskripsi, dosenId, kelasId, googleFormId, googleFormUrl, driveFolderId, indikator } = body;
+  const { judul, deskripsi, dosenId, kelasId, mataKuliah, googleFormId, googleFormUrl, driveFolderId, indikator } = body; // ← tambah mataKuliah
 
   const soal = await db.soal.create({
     data: {
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
       deskripsi,
       dosenId,
       kelasId,
+      mataKuliah, // ← tambah
       googleFormId,
       googleFormUrl,
       driveFolderId,
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const pdfBuffer = await generateSoalPdf({ judul: soal.judul, deskripsi: soal.deskripsi, indikator: soal.indikator });
-    const { fileId, webViewLink } = await uploadSoalPdf(pdfBuffer, `${soal.judul}.pdf`, soal.kelasId);
+    const { fileId, webViewLink } = await uploadSoalPdf(pdfBuffer, `${soal.judul}.pdf`, soal.kelasId, soal.mataKuliah);
 
     const updated = await db.soal.update({
       where: { id: soal.id },

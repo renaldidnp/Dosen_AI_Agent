@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Plus, School, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Plus, School, Trash2, X } from "lucide-react";
 
 type Kelas = { id: string; nama: string; angkatan: string; createdAt: string };
 
@@ -13,6 +13,13 @@ export default function KelasPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // state modal edit
+  const [editingKelas, setEditingKelas] = useState<Kelas | null>(null);
+  const [editNama, setEditNama] = useState("");
+  const [editAngkatan, setEditAngkatan] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   async function loadKelas() {
     setLoading(true);
@@ -67,6 +74,46 @@ export default function KelasPage() {
       await loadKelas();
     } finally {
       setDeletingId(null);
+    }
+  }
+
+  function openEditModal(k: Kelas) {
+    setEditingKelas(k);
+    setEditNama(k.nama);
+    setEditAngkatan(k.angkatan);
+    setEditError(null);
+  }
+
+  function closeEditModal() {
+    setEditingKelas(null);
+    setEditNama("");
+    setEditAngkatan("");
+    setEditError(null);
+  }
+
+  async function handleSaveEdit() {
+    if (!editingKelas) return;
+    setEditError(null);
+    if (!editNama.trim() || !editAngkatan.trim()) {
+      setEditError("Nama kelas dan angkatan wajib diisi.");
+      return;
+    }
+    setIsSavingEdit(true);
+    try {
+      const res = await fetch(`/api/kelas/${editingKelas.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nama: editNama.trim(), angkatan: editAngkatan.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEditError(data.error ?? "Gagal menyimpan perubahan.");
+        return;
+      }
+      closeEditModal();
+      await loadKelas();
+    } finally {
+      setIsSavingEdit(false);
     }
   }
 
@@ -131,20 +178,76 @@ export default function KelasPage() {
                       <p className="text-xs text-slate-400">Angkatan {k.angkatan}</p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDelete(k.id)}
-                    disabled={deletingId === k.id}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
-                    aria-label="Hapus kelas"
-                  >
-                    {deletingId === k.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => openEditModal(k)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600" aria-label="Edit kelas">
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(k.id)}
+                      disabled={deletingId === k.id}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label="Hapus kelas"
+                    >
+                      {deletingId === k.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
         </section>
       </div>
+
+      {/* Modal Edit Kelas */}
+      {editingKelas && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-slate-800">Edit Kelas</h3>
+              <button onClick={closeEditModal} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-50">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 mb-5">
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Nama Kelas</label>
+                <input
+                  type="text"
+                  value={editNama}
+                  onChange={(e) => setEditNama(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Angkatan</label>
+                <input
+                  type="text"
+                  value={editAngkatan}
+                  onChange={(e) => setEditAngkatan(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+              {editError && <p className="text-sm text-red-600">{editError}</p>}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+              <button onClick={closeEditModal} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+                Batal
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={isSavingEdit || !editNama.trim() || !editAngkatan.trim()}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isSavingEdit && <Loader2 className="w-4 h-4 animate-spin" />}
+                Simpan Perubahan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

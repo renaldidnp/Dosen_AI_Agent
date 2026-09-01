@@ -24,7 +24,7 @@ const STATUS_STYLE: Record<LogStatus, { label: string; className: string }> = {
 
 const POLL_INTERVAL_MS = 6000;
 
-export default function RealTimeLog({ endpoint = "/api/activity-log" }: { endpoint?: string }) {
+export default function RealTimeLog({ endpoint = "/api/dashboard/activity-log" }: { endpoint?: string }) {
   // Render awal (server & client) SELALU kosong/loading -> tidak ada
   // teks yang bisa berbeda antara SSR dan CSR -> tidak ada hydration error.
   const [entries, setEntries] = useState<LogEntry[]>([]);

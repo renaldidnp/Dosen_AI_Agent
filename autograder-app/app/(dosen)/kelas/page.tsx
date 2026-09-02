@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Loader2, Pencil, Plus, School, Trash2, X } from "lucide-react";
 
@@ -169,7 +170,7 @@ export default function KelasPage() {
             <ul className="divide-y divide-slate-100">
               {kelasList.map((k) => (
                 <li key={k.id} className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-3">
+                  <Link href={`/kelas/${k.id}`} className="flex items-center gap-3 hover:opacity-70">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50">
                       <School className="h-4 w-4 text-indigo-600" />
                     </div>
@@ -177,7 +178,7 @@ export default function KelasPage() {
                       <p className="text-sm font-medium text-slate-900">{k.nama}</p>
                       <p className="text-xs text-slate-400">Angkatan {k.angkatan}</p>
                     </div>
-                  </div>
+                  </Link>
                   <div className="flex items-center gap-1">
                     <button onClick={() => openEditModal(k)} className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600" aria-label="Edit kelas">
                       <Pencil className="h-4 w-4" />

@@ -1,4 +1,5 @@
 import "./globals.css";
+import { ThemeProvider } from "./theme-provider";
 
 export const metadata = {
   title: "Autograder Dosen",
@@ -7,8 +8,17 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" className="h-full">
-      <body className="h-full bg-gray-50">{children}</body>
+    <html lang="id" data-theme="dark" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('nexus-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

@@ -91,7 +91,8 @@ model Submission {
   driveFileUrl    String
   formResponseId  String?  @unique // ID respons dari Google Form, cegah duplikat
 
-  status          String   @default("diterima") // diterima | diproses | selesai | gagal
+  status          String   @default("diterima")
+  accessToken     String   @unique @default(cuid())
 
   hasilKoreksi    HasilKoreksi?
 

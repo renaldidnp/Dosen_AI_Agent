@@ -33,6 +33,12 @@ export type GradingResult = {
   feedback: string;
 };
 
+export type GradingErrorResult = {
+  submission_id: string;
+  status: "error";
+  errorMessage: string;
+};
+
 // === Tipe untuk generate soal (AI Assistant di form Buat Soal) ===
 
 export type ChatHistoryItem = {

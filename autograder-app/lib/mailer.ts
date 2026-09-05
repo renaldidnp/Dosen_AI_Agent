@@ -1,6 +1,13 @@
 import { Resend } from "resend";
 
-export async function sendHasilPenilaianEmail(params: { to: string; namaMahasiswa: string; judulSoal: string; skorTotal: number; feedback: string }) {
+export async function sendHasilPenilaianEmail(params: {
+  to: string;
+  namaMahasiswa: string;
+  judulSoal: string;
+  skorTotal: number;
+  feedback: string;
+  link: string; // ← baru
+}) {
   const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {
@@ -9,13 +16,8 @@ export async function sendHasilPenilaianEmail(params: { to: string; namaMahasisw
   }
 
   const resend = new Resend(apiKey);
-  const { to, namaMahasiswa, judulSoal, skorTotal, feedback } = params;
+  const { to, namaMahasiswa, judulSoal, skorTotal, feedback, link } = params;
 
-  // PENTING: "onboarding@resend.dev" cuma untuk testing/development.
-  // Kalau mau kirim ke email asli mahasiswa secara production,
-  // ganti dengan domain kamu sendiri yang SUDAH diverifikasi di
-  // dashboard Resend (Settings > Domains). Domain yang belum
-  // diverifikasi akan bikin resend.emails.send() throw error.
   const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Autograder <onboarding@resend.dev>";
 
   const { error } = await resend.emails.send({
@@ -28,12 +30,11 @@ export async function sendHasilPenilaianEmail(params: { to: string; namaMahasisw
       <p><strong>Skor Total: ${skorTotal}</strong></p>
       <p>Feedback:</p>
       <p>${feedback}</p>
+      <p><a href="${link}" style="color: #4f46e5;">Lihat rincian nilai per indikator &rarr;</a></p>
     `,
   });
 
   if (error) {
-    // Resend SDK kadang return error di object, bukan throw exception.
-    // Kita throw manual di sini biar konsisten ditangkap oleh try/catch pemanggil.
     throw new Error(`Resend error: ${JSON.stringify(error)}`);
   }
 }

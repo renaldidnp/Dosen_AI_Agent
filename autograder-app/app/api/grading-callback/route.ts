@@ -34,6 +34,8 @@ export async function POST(req: NextRequest) {
     data: { status: "selesai" },
   });
 
+  const link = `${process.env.APP_URL}/nilai/${submission.id}?token=${submission.accessToken}`;
+
   // Kirim email hasil ke mahasiswa, karena mereka nggak akses web
   await sendHasilPenilaianEmail({
     to: submission.emailMahasiswa,
@@ -41,6 +43,7 @@ export async function POST(req: NextRequest) {
     judulSoal: submission.soal.judul,
     skorTotal: skor_total,
     feedback,
+    link, // ← baru
   });
 
   await db.hasilKoreksi.update({

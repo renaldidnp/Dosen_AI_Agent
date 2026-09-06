@@ -13,23 +13,34 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 const STORAGE_KEY = "nexus-theme";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark"); // Default aman untuk SSR
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const saved = window.localStorage.getItem(STORAGE_KEY) as Theme | null;
     if (saved === "dark" || saved === "light") {
       setTheme(saved);
+      document.documentElement.setAttribute("data-theme", saved);
+    } else {
+      const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const initialTheme = systemPrefersDark ? "dark" : "light";
+      setTheme(initialTheme);
+      document.documentElement.setAttribute("data-theme", initialTheme);
     }
   }, []);
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-  }, [theme]);
+    if (mounted) {
+      document.documentElement.setAttribute("data-theme", theme);
+    }
+  }, [theme, mounted]);
 
   function toggleTheme() {
     setTheme((prev) => {
       const next: Theme = prev === "dark" ? "light" : "dark";
       window.localStorage.setItem(STORAGE_KEY, next);
+      document.documentElement.setAttribute("data-theme", next);
       return next;
     });
   }

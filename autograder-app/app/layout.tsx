@@ -8,11 +8,23 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" data-theme="dark" suppressHydrationWarning>
+    <html lang="id" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('nexus-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`,
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('nexus-theme');
+                  var theme = saved;
+                  if (!theme) {
+                    var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    theme = systemDark ? 'dark' : 'light';
+                  }
+                  document.documentElement.setAttribute('data-theme', theme);
+                } catch (e) {}
+              })();
+            `,
           }}
         />
       </head>

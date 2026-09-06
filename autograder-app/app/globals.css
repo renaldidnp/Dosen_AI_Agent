@@ -2,60 +2,99 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap");
+
 :root {
-  --background: #f9fafb;
-  --foreground: #171717;
+  --background: #f8f9ff;
+  --foreground: #0b1c30;
 }
 
-:root[data-theme="dark"] {
-  --bg: #05070a;
-  --bg-panel: #0a0e14;
-  --bg-panel-translucent: rgba(17, 17, 24, 0.8);
-  --border-soft: rgba(255, 255, 255, 0.05);
-  --border: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.3);
-  --text: #e6ecf1;
-  --text-muted: #9aa7b2;
-  --text-faint: #5c6b78;
-  --accent: #2dd4bf;
-  --accent-ink: #2dd4bf;
-  --accent-hover: #5eead4;
-  --accent-fg: #05070a;
-  --accent-soft: rgba(45, 212, 191, 0.1);
-  --accent-border: rgba(45, 212, 191, 0.4);
-  --accent-border-strong: rgba(45, 212, 191, 0.7);
-  --dot: #3a4048;
-  --glow-shadow: 0 0 60px -15px rgba(45, 212, 191, 0.25);
-  --glow-radial: radial-gradient(circle, rgba(45, 212, 191, 0.08) 0%, transparent 70%);
-  --grid-opacity: 0.1;
-  --danger-border: rgba(255, 59, 107, 0.4);
-  --danger-soft: rgba(255, 59, 107, 0.1);
-  --danger-text: #ff8fa8;
-}
+/* =====================================================
+   LIGHT THEME — Nexus Edu academic blue
+   ===================================================== */
 :root[data-theme="light"] {
-  --bg: #eef2f1;
+  --bg: #f8f9ff;
   --bg-panel: #ffffff;
-  --bg-panel-translucent: rgba(255, 255, 255, 0.85);
-  --border-soft: rgba(5, 7, 10, 0.06);
-  --border: rgba(5, 7, 10, 0.12);
-  --border-strong: rgba(5, 7, 10, 0.35);
-  --text: #0b1114;
+  --bg-panel-translucent: rgba(255, 255, 255, 0.9);
+
+  --border-soft: rgba(11, 28, 48, 0.05);
+  --border: rgba(11, 28, 48, 0.1);
+  --border-strong: rgba(11, 28, 48, 0.3);
+
+  --text: #0b1c30;
   --text-muted: #4b5761;
-  --text-faint: #6b7680;
-  --accent: #2dd4bf;
-  --accent-ink: #0f766e;
-  --accent-hover: #14b8a6;
-  --accent-fg: #05070a;
-  --accent-soft: rgba(45, 212, 191, 0.14);
-  --accent-border: rgba(45, 212, 191, 0.45);
-  --accent-border-strong: rgba(45, 212, 191, 0.6);
-  --dot: #c7cdd0;
-  --glow-shadow: 0 8px 30px -12px rgba(15, 23, 20, 0.14);
-  --glow-radial: radial-gradient(circle, rgba(45, 212, 191, 0.1) 0%, transparent 70%);
-  --grid-opacity: 0.05;
-  --danger-border: rgba(220, 38, 38, 0.35);
+  --text-faint: #94a3b8;
+
+  --accent: #1e40af;
+  --accent-ink: #1e40af;
+  --accent-hover: #1e3a8a;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(30, 64, 175, 0.08);
+  --accent-border: rgba(30, 64, 175, 0.18);
+  --accent-border-strong: rgba(30, 64, 175, 0.4);
+
+  --success: #10b981;
+  --success-ink: #047857;
+  --success-soft: rgba(16, 185, 129, 0.1);
+  --success-border: rgba(16, 185, 129, 0.3);
+
+  --warning: #f59e0b;
+  --warning-ink: #92400e;
+  --warning-soft: rgba(245, 158, 11, 0.12);
+  --warning-border: rgba(245, 158, 11, 0.35);
+
+  --dot: #cbd5e1;
+  --glow-shadow: 0 8px 30px -12px rgba(15, 23, 42, 0.14);
+  --glow-radial: radial-gradient(circle, rgba(30, 64, 175, 0.08) 0%, transparent 70%);
+  --grid-opacity: 0;
+
+  --danger-border: rgba(220, 38, 38, 0.3);
   --danger-soft: rgba(220, 38, 38, 0.08);
   --danger-text: #b91c1c;
+}
+
+/* =====================================================
+   DARK THEME — same academic system, night surface
+   ===================================================== */
+:root[data-theme="dark"] {
+  --bg: #0a0f1c;
+  --bg-panel: #111827;
+  --bg-panel-translucent: rgba(17, 24, 39, 0.88);
+
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.28);
+
+  --text: #e6ecf5;
+  --text-muted: #96a3b8;
+  --text-faint: #5c6b7f;
+
+  --accent: #3b82f6;
+  --accent-ink: #60a5fa;
+  --accent-hover: #2563eb;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(59, 130, 246, 0.14);
+  --accent-border: rgba(59, 130, 246, 0.32);
+  --accent-border-strong: rgba(59, 130, 246, 0.55);
+
+  --success: #34d399;
+  --success-ink: #6ee7b7;
+  --success-soft: rgba(52, 211, 153, 0.14);
+  --success-border: rgba(52, 211, 153, 0.35);
+
+  --warning: #fbbf24;
+  --warning-ink: #fcd34d;
+  --warning-soft: rgba(251, 191, 36, 0.14);
+  --warning-border: rgba(251, 191, 36, 0.35);
+
+  --dot: #334155;
+  --glow-shadow: 0 8px 30px -12px rgba(0, 0, 0, 0.55);
+  --glow-radial: radial-gradient(circle, rgba(59, 130, 246, 0.14) 0%, transparent 70%);
+  --grid-opacity: 0.03;
+
+  --danger-border: rgba(248, 113, 113, 0.4);
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --danger-text: #fca5a5;
 }
 
 * {
@@ -72,11 +111,31 @@ body {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   transition: background-color 0.3s, color 0.3s;
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-heading {
+  font-family: "Plus Jakarta Sans", "Inter", sans-serif;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 9999px;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Rss, History, Loader2 } from "lucide-react";
+import { Zap, RefreshCw, Loader2, UploadCloud, Sparkles, AlertTriangle, CheckCheck } from "lucide-react";
 
 type LogStatus = "running" | "queued" | "done";
 
@@ -18,22 +18,22 @@ type LogEntry = ApiLogEntry & { timeLabel: string };
 
 const STATUS_STYLE: Record<
   LogStatus,
-  { label: string; className: string }
+  { label: string; className: string; icon: typeof UploadCloud }
 > = {
   running: {
-    label: "RUNNING",
-    className:
-      "text-[var(--accent-ink)] bg-[var(--accent-soft)] border-[var(--accent-border)]",
+    label: "Berjalan",
+    className: "text-[var(--accent-ink)] bg-[var(--accent-soft)] border-[var(--accent-border)]",
+    icon: Sparkles,
   },
   queued: {
-    label: "QUEUED",
-    className:
-      "text-[var(--text)] bg-[var(--bg-panel)] border-[var(--border-strong)]",
+    label: "Antre",
+    className: "text-[var(--warning-ink)] bg-[var(--warning-soft)] border-[var(--warning-border)]",
+    icon: AlertTriangle,
   },
   done: {
-    label: "DONE",
-    className:
-      "text-[var(--text-muted)] bg-[var(--bg)] border-[var(--border-soft)]",
+    label: "Selesai",
+    className: "text-[var(--success-ink)] bg-[var(--success-soft)] border-[var(--success-border)]",
+    icon: CheckCheck,
   },
 };
 
@@ -91,198 +91,101 @@ export default function RealTimeLog({
   return (
     <div
       className="
-        bg-[var(--bg-panel-translucent)]
-        backdrop-blur-xl
+        bg-[var(--bg-panel)]
         border border-[var(--border)]
-        rounded-[4px]
+        rounded-2xl
+        shadow-xs
         flex flex-col
         h-full
         transition-colors duration-300
+        overflow-hidden
       "
     >
       {/* HEADER */}
-      <div
-        className="
-          flex items-center justify-between
-          px-4 py-3
-          border-b border-[var(--border-soft)]
-        "
-      >
-        <h2
-          className="
-            font-mono
-            text-sm
-            text-[var(--text)]
-            uppercase
-            tracking-widest
-            flex items-center gap-2
-          "
-        >
-          <Rss className="w-4 h-4 text-[var(--accent)]" />
-          Real-Time Log
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-soft)]">
+        <h2 className="font-heading text-sm font-bold text-[var(--text)] flex items-center gap-2">
+          <Zap className="w-[18px] h-[18px] text-[var(--accent)]" />
+          Aktivitas Real-Time &amp; AI
         </h2>
 
         <span
-          className="
-            w-2 h-2
-            rounded-full
-            bg-[var(--accent)]
-            animate-pulse
-          "
-          style={{
-            boxShadow: "0 0 8px color-mix(in srgb, var(--accent) 80%, transparent)",
-          }}
+          className="w-2.5 h-2.5 rounded-full bg-[var(--success)] animate-pulse"
+          title="Tersinkron"
         />
       </div>
 
       {/* LOG CONTENT */}
-      <div
-        className="
-          flex-1
-          divide-y divide-[var(--border-soft)]
-          overflow-y-auto
-          max-h-[520px]
-        "
-      >
+      <div className="flex-1 divide-y divide-[var(--border-soft)] overflow-y-auto max-h-[520px]">
         {loading ? (
-          <div
-            className="
-              flex items-center justify-center gap-2
-              text-[var(--text-muted)]
-              text-xs
-              font-mono
-              py-10
-            "
-          >
-            <Loader2
-              className="
-                w-4 h-4
-                animate-spin
-                text-[var(--accent)]
-              "
-            />
+          <div className="flex items-center justify-center gap-2 text-[var(--text-muted)] text-xs py-10">
+            <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
             Memuat aktivitas...
           </div>
         ) : error ? (
-          <div
-            className="
-              text-center
-              text-xs
-              font-mono
-              text-[var(--danger-text)]
-              py-10
-            "
-          >
-            {error}
-          </div>
+          <div className="text-center text-xs text-[var(--danger-text)] py-10">{error}</div>
         ) : entries.length === 0 ? (
-          <div
-            className="
-              text-center
-              text-xs
-              font-mono
-              text-[var(--text-muted)]
-              py-10
-            "
-          >
+          <div className="text-center text-xs text-[var(--text-muted)] py-10">
             Belum ada aktivitas submission.
           </div>
         ) : (
           entries.map((entry) => {
             const style = STATUS_STYLE[entry.status];
+            const StatusIcon = style.icon;
 
             return (
               <div
                 key={entry.id}
-                className="
-                  px-4 py-3
-                  transition-colors
-                  hover:bg-[var(--accent-soft)]
-                "
+                className="px-5 py-3.5 transition-colors hover:bg-[var(--accent-soft)]/40 flex items-start gap-3"
               >
-                {/* CODE + TIME + STATUS */}
-                <div className="flex items-center justify-between mb-1 gap-3">
-                  <span
-                    className="
-                      font-mono
-                      text-[10px]
-                      text-[var(--text-faint)]
-                      uppercase
-                      tracking-wider
-                    "
-                  >
-                    {entry.code} // {entry.timeLabel}
-                  </span>
-
-                  <span
-                    className={`
-                      font-mono
-                      text-[9px]
-                      px-1.5 py-0.5
-                      rounded-[2px]
-                      border
-                      uppercase
-                      tracking-wider
-                      shrink-0
-                      ${style.className}
-                    `}
-                  >
-                    {style.label}
-                  </span>
-                </div>
-
-                {/* TITLE */}
-                <h3
+                <div
                   className={`
-                    text-sm
-                    font-medium
-                    ${
-                      entry.status === "done"
-                        ? "text-[var(--text-muted)]"
-                        : "text-[var(--text)]"
-                    }
+                    w-8 h-8 rounded-lg
+                    flex items-center justify-center shrink-0 mt-0.5
+                    ${style.className}
                   `}
                 >
-                  {entry.title}
-                </h3>
+                  <StatusIcon className="w-4 h-4" />
+                </div>
 
-                {/* DETAIL */}
-                <p
-                  className="
-                    text-xs
-                    text-[var(--text-muted)]
-                    font-mono
-                    mt-0.5
-                  "
-                >
-                  {entry.detail}
-                </p>
+                <div className="min-w-0 flex-1 text-xs">
+                  <div className="flex items-center justify-between gap-3 mb-0.5">
+                    <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-wide">
+                      {entry.code}
+                    </span>
 
-                {/* RUNNING PROGRESS */}
-                {entry.status === "running" && (
-                  <div
-                    className="
-                      mt-2
-                      h-1
-                      bg-[var(--border-soft)]
-                      rounded-[2px]
-                      overflow-hidden
-                    "
-                  >
-                    <div
-                      className="
-                        h-full
-                        bg-[var(--accent)]
-                        animate-pulse
-                      "
-                      style={{
-                        width: "70%",
-                        boxShadow:
-                          "0 0 6px color-mix(in srgb, var(--accent) 60%, transparent)",
-                      }}
-                    />
+                    <span
+                      className={`
+                        text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0
+                        ${style.className}
+                      `}
+                    >
+                      {style.label}
+                    </span>
                   </div>
-                )}
+
+                  <h3
+                    className={`text-sm font-semibold leading-snug ${
+                      entry.status === "done" ? "text-[var(--text-muted)]" : "text-[var(--text)]"
+                    }`}
+                  >
+                    {entry.title}
+                  </h3>
+
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{entry.detail}</p>
+
+                  <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-faint)] mt-1">
+                    <span>{entry.timeLabel}</span>
+                  </div>
+
+                  {entry.status === "running" && (
+                    <div className="mt-2 h-1.5 bg-[var(--border-soft)] rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-[var(--accent)] animate-pulse"
+                        style={{ width: "70%" }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })
@@ -294,20 +197,16 @@ export default function RealTimeLog({
         onClick={load}
         className="
           flex items-center justify-center gap-2
-          text-[var(--text-muted)]
-          hover:text-[var(--text)]
+          text-[var(--text-muted)] hover:text-[var(--accent-ink)]
           hover:bg-[var(--accent-soft)]
           transition-colors
-          font-mono
-          text-[10px]
-          uppercase
-          tracking-wider
+          text-xs font-bold
           py-3
           border-t border-[var(--border-soft)]
         "
       >
-        <History className="w-3.5 h-3.5" />
-        Refresh Log
+        <RefreshCw className="w-3.5 h-3.5" />
+        Muat Ulang Log
       </button>
     </div>
   );

@@ -3,22 +3,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Activity,
+  LayoutDashboard,
   Database,
   Users,
   Settings,
   Search,
-  Terminal,
+  HelpCircle,
   Sun,
   Moon,
+  Sparkles,
+  ChevronDown,
 } from "lucide-react";
 import { useTheme } from "@/app/theme-provider";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Command", icon: Activity },
-  { href: "/soal", label: "Soal_DB", icon: Database },
-  { href: "/mahasiswa", label: "Nodes", icon: Users },
-  { href: "/settings", label: "Config", icon: Settings },
+  { href: "/dashboard", label: "Beranda", icon: LayoutDashboard },
+  { href: "/soal", label: "Bank Soal", icon: Database },
+  { href: "/mahasiswa", label: "Mahasiswa", icon: Users },
+  { href: "/settings", label: "Pengaturan", icon: Settings },
 ];
 
 export default function DashboardShell({
@@ -36,588 +38,219 @@ export default function DashboardShell({
         bg-[var(--bg)]
         text-[var(--text)]
         font-sans
-        selection:bg-[var(--accent)]
-        selection:text-[var(--accent-fg)]
+        selection:bg-[var(--accent-soft)]
+        selection:text-[var(--accent-ink)]
         transition-colors
         duration-300
       "
     >
       {/* =========================================================
-          AMBIENT BACKGROUND
+          FIXED SIDEBAR
       ========================================================= */}
-      <div
-        className="fixed inset-0 pointer-events-none z-0"
-        style={{
-          backgroundImage: `
-            radial-gradient(
-              circle at 10% 20%,
-              color-mix(in srgb, var(--accent) 7%, transparent) 0%,
-              transparent 40%
-            ),
-            radial-gradient(
-              circle at 90% 80%,
-              color-mix(in srgb, var(--accent) 5%, transparent) 0%,
-              transparent 40%
-            ),
-            linear-gradient(
-              var(--accent) 1px,
-              transparent 1px
-            ),
-            linear-gradient(
-              90deg,
-              var(--accent) 1px,
-              transparent 1px
-            )
-          `,
-          backgroundSize:
-            "100% 100%, 100% 100%, 48px 48px, 48px 48px",
-          opacity: "var(--grid-opacity)",
-        }}
-      />
-
-      {/* =========================================================
-          SIDEBAR
-      ========================================================= */}
-      <nav
+      <aside
         className="
-          group
-          fixed
-          left-0
-          top-0
-          z-50
-
-          h-screen
-          w-20
-          hover:w-64
-          overflow-hidden
-
-          bg-[var(--bg-panel-translucent)]
-          backdrop-blur-xl
-
-          border-r
-          border-[var(--border)]
-
-          flex
-          flex-col
-          items-center
-
-          py-6
-
-          transition-all
-          duration-300
+          fixed left-0 top-0 z-50
+          h-screen w-[16.5rem]
+          bg-[var(--bg-panel)]
+          border-r border-[var(--border)]
+          flex flex-col justify-between
+          shadow-sm
+          transition-colors duration-300
         "
       >
-        {/* -------------------------------------------------------
-            BRAND
-        ------------------------------------------------------- */}
-        <div className="mb-10 flex items-center w-full px-4 shrink-0">
+        <div className="flex flex-col overflow-y-auto">
+          {/* Brand */}
+          <div className="h-20 px-6 flex items-center gap-3 border-b border-[var(--border-soft)] shrink-0">
+            <div
+              className="
+                h-9 w-9 rounded-xl
+                bg-[var(--accent)]
+                text-[var(--accent-fg)]
+                flex items-center justify-center
+                shrink-0
+              "
+            >
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-heading font-bold text-lg text-[var(--accent-ink)] tracking-tight leading-none truncate">
+                Nexus Edu
+              </span>
+              <span className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-wider mt-1">
+                Portal Pengampu
+              </span>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <div className="px-4 py-6">
+            <p className="text-[11px] uppercase text-[var(--text-faint)] font-bold tracking-wider px-3 mb-2.5">
+              Menu Utama
+            </p>
+
+            <nav className="flex flex-col gap-1.5">
+              {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+                const active = pathname?.startsWith(href);
+
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`
+                      flex items-center gap-3
+                      px-3.5 py-2.5
+                      rounded-xl
+                      text-sm font-semibold
+                      transition-all
+                      ${
+                        active
+                          ? "bg-[var(--accent)] text-[var(--accent-fg)] shadow-sm"
+                          : "text-[var(--text-muted)] hover:text-[var(--accent-ink)] hover:bg-[var(--accent-soft)]"
+                      }
+                    `}
+                  >
+                    <Icon className="w-[20px] h-[20px] shrink-0" />
+                    <span className="truncate">{label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+
+        {/* Bottom: AI Copilot status + system links */}
+        <div className="px-4 py-5 border-t border-[var(--border-soft)] bg-[var(--bg)]/40 shrink-0">
           <div
             className="
-              relative
-              w-10
-              h-10
-              rounded-[4px]
-
+              p-3 mb-3
               bg-[var(--accent-soft)]
-              border
-              border-[var(--accent-border)]
-
-              shrink-0
-
-              flex
-              items-center
-              justify-center
-
-              text-[var(--accent-ink)]
-
-              transition-colors
-              duration-300
+              rounded-xl border border-[var(--accent-border)]
+              flex items-center gap-3
             "
           >
-            <Activity className="w-5 h-5" />
-
-            {/* Corner decoration */}
-            <span
-              className="
-                absolute
-                -top-px
-                -left-px
-                w-2
-                h-2
-                border-t
-                border-l
-                border-[var(--accent)]
-              "
-            />
-
-            <span
-              className="
-                absolute
-                -bottom-px
-                -right-px
-                w-2
-                h-2
-                border-b
-                border-r
-                border-[var(--accent)]
-              "
-            />
-          </div>
-
-          <div
-            className="
-              ml-4
-              opacity-0
-              group-hover:opacity-100
-              transition-opacity
-              duration-300
-              whitespace-nowrap
-            "
-          >
-            <div
-              className="
-                font-semibold
-                text-[var(--accent-ink)]
-                text-sm
-                tracking-tight
-              "
-              style={{
-                textShadow:
-                  "0 0 10px color-mix(in srgb, var(--accent) 40%, transparent)",
-              }}
-            >
-              SYS.ADM_01
+            <div className="w-8 h-8 rounded-lg bg-[var(--accent)] text-[var(--accent-fg)] flex items-center justify-center shrink-0">
+              <Sparkles className="w-[18px] h-[18px]" />
             </div>
-
-            <div
-              className="
-                text-[10px]
-                text-[var(--text-muted)]
-                font-mono
-                uppercase
-                tracking-widest
-                mt-1
-              "
-            >
-              Nexus // Eduportal
-            </div>
-          </div>
-        </div>
-
-        {/* -------------------------------------------------------
-            NAVIGATION
-        ------------------------------------------------------- */}
-        <div
-          className="
-            flex-1
-            w-full
-            space-y-1
-            px-3
-
-            flex
-            flex-col
-            items-center
-            group-hover:items-start
-          "
-        >
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-            const active = pathname?.startsWith(href);
-
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`
-                  relative
-                  w-full
-
-                  flex
-                  items-center
-
-                  py-3
-                  px-3
-
-                  rounded-[4px]
-
-                  transition-all
-                  duration-200
-
-                  border-l-2
-
-                  ${
-                    active
-                      ? `
-                        text-[var(--accent-ink)]
-                        border-[var(--accent)]
-                        bg-[var(--accent-soft)]
-                      `
-                      : `
-                        text-[var(--text-muted)]
-                        border-transparent
-
-                        hover:bg-[var(--accent-soft)]
-                        hover:text-[var(--accent-ink)]
-                      `
-                  }
-                `}
-              >
-                {/* Active indicator */}
-                {active && (
-                  <span
-                    className="
-                      absolute
-                      right-0
-                      top-1/2
-                      -translate-y-1/2
-
-                      w-1
-                      h-5
-
-                      bg-[var(--accent)]
-                    "
-                    style={{
-                      boxShadow: "0 0 8px var(--accent)",
-                    }}
-                  />
-                )}
-
-                <Icon className="w-5 h-5 shrink-0" />
-
-                <span
-                  className="
-                    ml-4
-
-                    opacity-0
-                    group-hover:opacity-100
-
-                    transition-opacity
-                    duration-300
-
-                    whitespace-nowrap
-
-                    font-mono
-                    text-xs
-                    uppercase
-                    tracking-wider
-                  "
-                >
-                  {label}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* -------------------------------------------------------
-            AGENT STATUS
-        ------------------------------------------------------- */}
-        <div
-          className="
-            mt-6
-            w-full
-            px-4
-            shrink-0
-
-            flex
-            items-center
-            justify-center
-            group-hover:justify-start
-          "
-        >
-          <div
-            className="
-              w-2
-              h-2
-
-              rounded-full
-
-              bg-[var(--accent)]
-
-              shrink-0
-
-              animate-pulse
-            "
-            style={{
-              boxShadow: "0 0 8px var(--accent)",
-            }}
-          />
-
-          <span
-            className="
-              ml-4
-
-              text-[10px]
-              text-[var(--accent-ink)]
-
-              font-mono
-              uppercase
-              tracking-widest
-
-              opacity-0
-              group-hover:opacity-100
-
-              transition-opacity
-              duration-300
-
-              whitespace-nowrap
-            "
-          >
-            Agent Core: Online
-          </span>
-        </div>
-      </nav>
-
-      {/* =========================================================
-          MAIN CONTENT
-      ========================================================= */}
-      <main
-        className="
-          ml-20
-          flex
-          flex-col
-          min-h-screen
-          relative
-          z-10
-        "
-      >
-        {/* =======================================================
-            TOP STATUS BAR
-        ======================================================= */}
-        <header
-          className="
-            bg-[var(--bg-panel-translucent)]
-            backdrop-blur-md
-
-            border-b
-            border-[var(--border)]
-
-            flex
-            justify-between
-            items-center
-
-            w-full
-            px-6
-            h-14
-
-            z-40
-            sticky
-            top-0
-
-            font-mono
-            text-xs
-
-            transition-colors
-            duration-300
-          "
-        >
-          {/* -----------------------------------------------------
-              SYSTEM STATUS
-          ----------------------------------------------------- */}
-          <div
-            className="
-              flex
-              items-center
-              gap-6
-
-              text-[var(--text-muted)]
-            "
-          >
-            <div className="flex items-center gap-2">
-              <span
-                className="text-[var(--accent)]"
-                style={{
-                  textShadow: "0 0 8px var(--accent)",
-                }}
-              >
-                ●
-              </span>
-
-              <span className="tracking-widest hidden sm:inline">
-                SYS.ONLINE
-              </span>
-            </div>
-
-            <div
-              className="
-                hidden
-                lg:flex
-                items-center
-                gap-2
-                text-[var(--text-faint)]
-              "
-            >
-              <span>NODE:</span>
-
-              <span className="text-[var(--accent-ink)]">
-                DOSEN
-              </span>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-[var(--accent-ink)] leading-tight">
+                AI Copilot
+              </div>
+              <div className="text-[11px] text-[var(--text-muted)] font-medium truncate">
+                Model aktif &amp; siap
+              </div>
             </div>
           </div>
 
-          {/* -----------------------------------------------------
-              SEARCH + THEME + TERMINAL
-          ----------------------------------------------------- */}
-          <div className="flex items-center gap-3">
-            {/* SEARCH */}
-            <div className="relative w-48 hidden sm:block">
-              <Search
-                className="
-                  w-3.5
-                  h-3.5
-
-                  absolute
-                  left-2
-                  top-1/2
-                  -translate-y-1/2
-
-                  text-[var(--accent)]
-                  opacity-60
-                "
-              />
-
-              <input
-                className="
-                  w-full
-
-                  bg-[var(--bg)]
-
-                  border
-                  border-[var(--border)]
-
-                  rounded-[2px]
-
-                  focus:ring-1
-                  focus:ring-[var(--accent)]
-                  focus:border-[var(--accent)]
-
-                  text-[var(--text)]
-
-                  pl-7
-                  py-1.5
-
-                  text-[10px]
-                  uppercase
-
-                  placeholder:text-[var(--text-faint)]
-
-                  transition-all
-
-                  font-mono
-                  outline-none
-                "
-                placeholder="Query database..."
-                type="text"
-              />
-            </div>
-
-            {/* =================================================
-                THEME TOGGLE
-            ================================================= */}
+          <nav className="flex flex-col gap-1">
             <button
               type="button"
               onClick={toggleTheme}
               aria-label={
-                theme === "dark"
-                  ? "Aktifkan mode terang"
-                  : "Aktifkan mode gelap"
-              }
-              title={
-                theme === "dark"
-                  ? "Switch to Light Mode"
-                  : "Switch to Dark Mode"
+                theme === "dark" ? "Aktifkan mode terang" : "Aktifkan mode gelap"
               }
               className="
-                group/theme
-
-                relative
-
-                flex
-                items-center
-                justify-center
-
-                w-8
-                h-8
-
-                rounded-[2px]
-
-                bg-[var(--bg)]
-
-                border
-                border-[var(--border)]
-
-                text-[var(--accent-ink)]
-
-                hover:bg-[var(--accent-soft)]
-                hover:border-[var(--accent-border)]
-
-                transition-all
-                duration-200
-
-                focus:outline-none
-                focus:ring-1
-                focus:ring-[var(--accent)]
+                flex items-center gap-3 px-3 py-2 rounded-lg
+                text-[var(--text-muted)]
+                hover:text-[var(--text)] hover:bg-[var(--accent-soft)]
+                font-medium text-sm transition-all
               "
             >
               {theme === "dark" ? (
-                <Sun
-                  className="
-                    w-4
-                    h-4
-
-                    transition-transform
-                    duration-300
-
-                    group-hover/theme:rotate-45
-                  "
-                />
+                <Sun className="w-[20px] h-[20px] text-[var(--text-faint)]" />
               ) : (
-                <Moon
-                  className="
-                    w-4
-                    h-4
-
-                    transition-transform
-                    duration-300
-
-                    group-hover/theme:-rotate-12
-                  "
-                />
+                <Moon className="w-[20px] h-[20px] text-[var(--text-faint)]" />
               )}
+              <span>{theme === "dark" ? "Mode Terang" : "Mode Gelap"}</span>
             </button>
 
-            {/* TERMINAL */}
             <button
               type="button"
               className="
-                text-[var(--accent-ink)]
-
-                hover:text-[var(--accent-hover)]
-                hover:bg-[var(--accent-soft)]
-
-                p-2
-
-                rounded-[2px]
-
-                transition-colors
-
-                focus:outline-none
-                focus:ring-1
-                focus:ring-[var(--accent)]
+                flex items-center gap-3 px-3 py-2 rounded-lg
+                text-[var(--text-muted)]
+                hover:text-[var(--text)] hover:bg-[var(--accent-soft)]
+                font-medium text-sm transition-all
               "
-              aria-label="Terminal"
             >
-              <Terminal className="w-4 h-4" />
+              <HelpCircle className="w-[20px] h-[20px] text-[var(--text-faint)]" />
+              <span>Pusat Bantuan</span>
             </button>
+          </nav>
+        </div>
+      </aside>
+
+      {/* =========================================================
+          MAIN CONTAINER
+      ========================================================= */}
+      <div className="pl-[16.5rem] min-h-screen flex flex-col">
+        {/* Top header */}
+        <header
+          className="
+            fixed top-0 left-[16.5rem] right-0 h-20 z-40
+            bg-[var(--bg-panel-translucent)] backdrop-blur-md
+            border-b border-[var(--border)]
+            flex items-center justify-between px-8
+            transition-colors duration-300
+          "
+        >
+          {/* Search */}
+          <div className="flex items-center gap-4 flex-1 max-w-xl">
+            <div className="relative w-full flex items-center">
+              <Search className="w-[20px] h-[20px] absolute left-3.5 text-[var(--text-faint)] pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Cari modul soal, ujian, topik, atau mahasiswa..."
+                className="
+                  w-full pl-10 pr-4 py-2.5
+                  bg-[var(--bg)]
+                  border border-[var(--border)]
+                  rounded-xl
+                  text-sm text-[var(--text)]
+                  placeholder:text-[var(--text-faint)]
+                  focus:outline-none focus:border-[var(--accent)]
+                  focus:ring-2 focus:ring-[var(--accent-soft)]
+                  transition-all
+                "
+              />
+            </div>
+          </div>
+
+          {/* Right actions */}
+          <div className="flex items-center gap-4">
+            <div
+              className="
+                hidden md:inline-flex items-center gap-2
+                px-3.5 py-1.5 rounded-full
+                bg-[var(--accent-soft)] border border-[var(--accent-border)]
+                text-[var(--accent-ink)]
+              "
+            >
+              <span className="w-2 h-2 rounded-full bg-[var(--success)] ring-2 ring-[var(--success-soft)]" />
+              <span className="text-xs font-semibold">Sistem Aktif</span>
+            </div>
+
+            <div className="h-8 w-px bg-[var(--border)]" />
+
+            <div className="flex items-center gap-3 pl-1">
+              <div className="w-10 h-10 rounded-full bg-[var(--accent-soft)] text-[var(--accent-ink)] flex items-center justify-center font-bold ring-2 ring-[var(--border-soft)]">
+                D
+              </div>
+              <div className="hidden xl:flex flex-col text-left">
+                <span className="text-sm font-bold text-[var(--text)] leading-tight">
+                  Dosen
+                </span>
+                <span className="text-xs text-[var(--text-muted)] leading-tight mt-0.5">
+                  Portal Pengampu
+                </span>
+              </div>
+              <ChevronDown className="w-[18px] h-[18px] text-[var(--text-faint)] cursor-pointer" />
+            </div>
           </div>
         </header>
 
-        {/* =======================================================
-            PAGE CONTENT
-        ======================================================= */}
-        <div className="flex-1 relative">
-          {children}
-        </div>
-      </main>
+        {/* Page content */}
+        <main className="w-full pt-24 flex-1 relative">{children}</main>
+      </div>
     </div>
   );
 }

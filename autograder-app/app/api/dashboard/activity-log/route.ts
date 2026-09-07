@@ -14,7 +14,7 @@ export async function GET() {
   try {
     const submissions = await db.submission.findMany({
       orderBy: { createdAt: "desc" },
-      take: 20,
+      take: 10,
       include: {
         soal: { select: { judul: true } },
         hasilKoreksi: true, // ganti ke `hasilkoreksi` jika nama relasi Prisma Anda begitu

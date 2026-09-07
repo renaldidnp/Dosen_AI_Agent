@@ -21,7 +21,7 @@ export default async function DashboardPage() {
   const activeCount = totalSoal - draftCount;
 
   return (
-    <div className="w-full px-8 pb-16 max-w-[1600px] mx-auto">
+    <div className="w-full px-4 sm:px-6 lg:px-8 pb-16 max-w-[1600px] mx-auto">
       {/* =========================================================
           GREETING & PRIMARY ACTIONS
       ========================================================= */}
@@ -54,72 +54,72 @@ export default async function DashboardPage() {
       {/* =========================================================
           KPI RIBBON
       ========================================================= */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-[var(--bg-panel)] rounded-2xl p-5 border border-[var(--border)] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="bg-[var(--bg-panel)] rounded-2xl p-3.5 sm:p-5 border border-[var(--border)] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-[10px] sm:text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide sm:tracking-wider truncate min-w-0">
               Total Modul Soal
             </span>
-            <div className="w-10 h-10 rounded-xl bg-[var(--accent-soft)] text-[var(--accent-ink)] flex items-center justify-center">
-              <FileStack className="w-[22px] h-[22px]" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--accent-soft)] text-[var(--accent-ink)] flex items-center justify-center">
+              <FileStack className="w-[16px] h-[16px] sm:w-[22px] sm:h-[22px]" />
             </div>
           </div>
-          <span className="text-3xl font-extrabold text-[var(--text)] mt-1">
+          <span className="text-xl sm:text-3xl font-extrabold text-[var(--text)] mt-1">
             {totalSoal}
           </span>
-          <div className="mt-3 pt-3 border-t border-[var(--border-soft)] flex items-center justify-between text-xs text-[var(--text-muted)]">
+          <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-[var(--border-soft)] flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[10px] sm:text-xs text-[var(--text-muted)]">
             <span>{activeCount} Aktif</span>
             <span className="font-medium text-[var(--text)]">{draftCount} Draft</span>
           </div>
         </div>
 
-        <div className="bg-[var(--bg-panel)] rounded-2xl p-5 border border-[var(--border)] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
+        <div className="bg-[var(--bg-panel)] rounded-2xl p-3.5 sm:p-5 border border-[var(--border)] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-[10px] sm:text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide sm:tracking-wider truncate min-w-0">
               Total Submisi Masuk
             </span>
-            <div className="w-10 h-10 rounded-xl bg-[var(--accent-soft)] text-[var(--accent-ink)] flex items-center justify-center">
-              <Users className="w-[22px] h-[22px]" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--accent-soft)] text-[var(--accent-ink)] flex items-center justify-center">
+              <Users className="w-[16px] h-[16px] sm:w-[22px] sm:h-[22px]" />
             </div>
           </div>
-          <span className="text-3xl font-extrabold text-[var(--text)] mt-1">
+          <span className="text-xl sm:text-3xl font-extrabold text-[var(--text)] mt-1">
             {totalSubmissions}
           </span>
-          <div className="mt-3 pt-3 border-t border-[var(--border-soft)] flex items-center justify-between text-xs text-[var(--text-muted)]">
+          <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-[var(--border-soft)] flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[10px] sm:text-xs text-[var(--text-muted)]">
             <span>Seluruh modul</span>
           </div>
         </div>
 
-        <div className="bg-[var(--bg-panel)] rounded-2xl p-5 border border-[var(--success-border)] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-[var(--success-ink)] uppercase tracking-wider">
+        <div className="bg-[var(--bg-panel)] rounded-2xl p-3.5 sm:p-5 border border-[var(--success-border)] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-[10px] sm:text-xs font-bold text-[var(--success-ink)] uppercase tracking-wide sm:tracking-wider truncate min-w-0">
               Modul Aktif
             </span>
-            <div className="w-10 h-10 rounded-xl bg-[var(--success-soft)] text-[var(--success-ink)] flex items-center justify-center">
-              <CircleCheck className="w-[22px] h-[22px]" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--success-soft)] text-[var(--success-ink)] flex items-center justify-center">
+              <CircleCheck className="w-[16px] h-[16px] sm:w-[22px] sm:h-[22px]" />
             </div>
           </div>
-          <span className="text-3xl font-extrabold text-[var(--text)] mt-1">
+          <span className="text-xl sm:text-3xl font-extrabold text-[var(--text)] mt-1">
             {activeCount}
           </span>
-          <div className="mt-3 pt-3 border-t border-[var(--border-soft)] flex items-center justify-between text-xs text-[var(--text-muted)]">
+          <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-[var(--border-soft)] flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[10px] sm:text-xs text-[var(--text-muted)]">
             <span>Sudah terhubung Google Form</span>
           </div>
         </div>
 
-        <div className="bg-[var(--bg-panel)] rounded-2xl p-5 border border-[var(--warning-border)] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-[var(--warning-ink)] uppercase tracking-wider">
+        <div className="bg-[var(--bg-panel)] rounded-2xl p-3.5 sm:p-5 border border-[var(--warning-border)] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-[10px] sm:text-xs font-bold text-[var(--warning-ink)] uppercase tracking-wide sm:tracking-wider truncate min-w-0">
               Modul Draft
             </span>
-            <div className="w-10 h-10 rounded-xl bg-[var(--warning-soft)] text-[var(--warning-ink)] flex items-center justify-center">
-              <FileEdit className="w-[22px] h-[22px]" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--warning-soft)] text-[var(--warning-ink)] flex items-center justify-center">
+              <FileEdit className="w-[16px] h-[16px] sm:w-[22px] sm:h-[22px]" />
             </div>
           </div>
-          <span className="text-3xl font-extrabold text-[var(--text)] mt-1">
+          <span className="text-xl sm:text-3xl font-extrabold text-[var(--text)] mt-1">
             {draftCount}
           </span>
-          <div className="mt-3 pt-3 border-t border-[var(--border-soft)] flex items-center justify-between text-xs text-[var(--text-muted)]">
+          <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-[var(--border-soft)] flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[10px] sm:text-xs text-[var(--text-muted)]">
             <span>Belum terhubung Google Form</span>
           </div>
         </div>
@@ -128,7 +128,7 @@ export default async function DashboardPage() {
       {/* =========================================================
           CONTENT: WORKSPACE + ACTIVITY PANEL
       ========================================================= */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
         {soalList.length === 0 ? (
           /* =====================================================
              EMPTY STATE

@@ -15,7 +15,11 @@ import {
   CalendarDays,
   Search,
   SearchX,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+
+const PAGE_SIZE = 9;
 
 type FilterTab = "all" | "active" | "draft";
 
@@ -50,6 +54,9 @@ export default function SoalGrid({
   // Search & filter
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Modal edit
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -109,6 +116,32 @@ export default function SoalGrid({
   ];
 
   // ============================================================
+  // PAGINATION
+  // ============================================================
+
+  const totalPages = Math.max(1, Math.ceil(filteredSoalList.length / PAGE_SIZE));
+
+  // Reset ke halaman 1 setiap kali pencarian/filter berubah, supaya
+  // tidak nyangkut di halaman kosong kalau hasil filter jadi lebih sedikit.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, activeTab]);
+
+  // Kalau soal dihapus dan halaman saat ini jadi lebih besar dari
+  // totalPages yang baru, mundurkan ke halaman terakhir yang valid.
+  useEffect(() => {
+    setCurrentPage((p) => Math.min(p, totalPages));
+  }, [totalPages]);
+
+  const paginatedSoalList = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredSoalList.slice(start, start + PAGE_SIZE);
+  }, [filteredSoalList, currentPage]);
+
+  const rangeStart = filteredSoalList.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(currentPage * PAGE_SIZE, filteredSoalList.length);
+
+  // ============================================================
   // CLOSE MENU WHEN CLICK OUTSIDE
   // ============================================================
 
@@ -149,20 +182,20 @@ export default function SoalGrid({
       setEditIndikator(
         detail.indikator?.length
           ? detail.indikator.map((ind: Indikator) => ({
-              id: ind.id,
-              nama: ind.nama,
-              bobot: ind.bobot,
-              rubrik: ind.rubrik,
-              skorMax: ind.skorMax,
-            }))
+            id: ind.id,
+            nama: ind.nama,
+            bobot: ind.bobot,
+            rubrik: ind.rubrik,
+            skorMax: ind.skorMax,
+          }))
           : [
-              {
-                nama: "",
-                bobot: 0,
-                rubrik: "",
-                skorMax: 100,
-              },
-            ],
+            {
+              nama: "",
+              bobot: 0,
+              rubrik: "",
+              skorMax: 100,
+            },
+          ],
       );
     } catch (err) {
       console.error(err);
@@ -253,9 +286,9 @@ export default function SoalGrid({
         prev.map((s) =>
           s.id === editingId
             ? {
-                ...s,
-                ...updated,
-              }
+              ...s,
+              ...updated,
+            }
             : s,
         ),
       );
@@ -351,10 +384,9 @@ export default function SoalGrid({
                 text-xs font-bold
                 whitespace-nowrap
                 transition-all
-                ${
-                  activeTab === tab.key
-                    ? "bg-[var(--accent)] text-[var(--accent-fg)] shadow-xs"
-                    : "text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--accent-soft)]"
+                ${activeTab === tab.key
+                  ? "bg-[var(--accent)] text-[var(--accent-fg)] shadow-xs"
+                  : "text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--accent-soft)]"
                 }
               `}
             >
@@ -402,11 +434,45 @@ export default function SoalGrid({
         /* ======================================================
            SOAL GRID
         ====================================================== */
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredSoalList.map((soal) => (
-            <div
-              key={soal.id}
-              className="
+        <>
+          {/* ----------------------------------------------------
+              MOBILE LIST (di bawah sm) — ringkas, satu kolom
+          ---------------------------------------------------- */}
+          <div className="sm:hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-panel)] divide-y divide-[var(--border-soft)] overflow-hidden">
+            {paginatedSoalList.map((soal) => (
+              <Link
+                key={soal.id}
+                href={`/output/${soal.id}/daftar-submission`}
+                className="flex items-center gap-3 px-4 py-3.5 active:bg-[var(--accent-soft)]/40 transition-colors"
+              >
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${isDraft(soal)
+                      ? "bg-[var(--text-faint)]"
+                      : "bg-[var(--success)] animate-pulse"
+                    }`}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-[var(--text)] truncate">
+                    {soal.judul}
+                  </p>
+                  <p className="text-[11px] text-[var(--text-faint)] truncate">
+                    {isDraft(soal) ? "Draft" : "Aktif"} &middot;{" "}
+                    {soal.submission?.length ?? 0} submisi
+                  </p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-[var(--text-faint)] shrink-0" />
+              </Link>
+            ))}
+          </div>
+
+          {/* ----------------------------------------------------
+              CARD GRID (sm ke atas) — versi lengkap
+          ---------------------------------------------------- */}
+          <div className="hidden sm:grid grid-cols-2 xl:grid-cols-3 gap-4">
+            {paginatedSoalList.map((soal) => (
+              <div
+                key={soal.id}
+                className="
                 relative
                 bg-[var(--bg-panel)]
                 border border-[var(--border)]
@@ -418,51 +484,51 @@ export default function SoalGrid({
                 transition-all
                 flex flex-col
               "
-            >
-              {/* HEADER CARD */}
-              <div className="flex justify-between items-start mb-3">
-                {/* Status pill */}
-                {isDraft(soal) ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--border-soft)] text-[var(--text-muted)] text-xs font-bold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-faint)]" />
-                    Draft
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--success-soft)] text-[var(--success-ink)] text-xs font-bold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
-                    Aktif
-                  </span>
-                )}
+              >
+                {/* HEADER CARD */}
+                <div className="flex justify-between items-start mb-3">
+                  {/* Status pill */}
+                  {isDraft(soal) ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--border-soft)] text-[var(--text-muted)] text-xs font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-faint)]" />
+                      Draft
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--success-soft)] text-[var(--success-ink)] text-xs font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
+                      Aktif
+                    </span>
+                  )}
 
-                {/* ID + Menu */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono text-[var(--text-faint)] bg-[var(--border-soft)] px-2 py-0.5 rounded-md">
-                    {soal.id.slice(0, 6).toUpperCase()}
-                  </span>
+                  {/* ID + Menu */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-[var(--text-faint)] bg-[var(--border-soft)] px-2 py-0.5 rounded-md">
+                      {soal.id.slice(0, 6).toUpperCase()}
+                    </span>
 
-                  <div
-                    className="relative"
-                    ref={openMenuId === soal.id ? menuRef : null}
-                  >
-                    <button
-                      onClick={() =>
-                        setOpenMenuId(openMenuId === soal.id ? null : soal.id)
-                      }
-                      className="
+                    <div
+                      className="relative"
+                      ref={openMenuId === soal.id ? menuRef : null}
+                    >
+                      <button
+                        onClick={() =>
+                          setOpenMenuId(openMenuId === soal.id ? null : soal.id)
+                        }
+                        className="
                         text-[var(--text-faint)]
                         hover:text-[var(--text)]
                         hover:bg-[var(--accent-soft)]
                         transition-colors
                         p-1.5 rounded-lg
                       "
-                      aria-label="Menu soal"
-                    >
-                      <MoreVertical className="w-[18px] h-[18px]" />
-                    </button>
+                        aria-label="Menu soal"
+                      >
+                        <MoreVertical className="w-[18px] h-[18px]" />
+                      </button>
 
-                    {openMenuId === soal.id && (
-                      <div
-                        className="
+                      {openMenuId === soal.id && (
+                        <div
+                          className="
                           absolute right-0 top-9 w-44 z-30
                           bg-[var(--bg-panel)]
                           border border-[var(--border)]
@@ -470,83 +536,83 @@ export default function SoalGrid({
                           shadow-lg
                           py-1.5
                         "
-                      >
-                        <button
-                          onClick={() => openEditModal(soal)}
-                          className="
+                        >
+                          <button
+                            onClick={() => openEditModal(soal)}
+                            className="
                             w-full text-left px-3.5 py-2
                             flex items-center gap-2
                             text-xs font-medium text-[var(--text)]
                             hover:bg-[var(--accent-soft)] hover:text-[var(--accent-ink)]
                             transition-colors
                           "
-                        >
-                          <Pencil className="w-4 h-4 text-[var(--accent)]" />
-                          Edit
-                        </button>
+                          >
+                            <Pencil className="w-4 h-4 text-[var(--accent)]" />
+                            Edit
+                          </button>
 
-                        <button
-                          onClick={() => openDeleteModal(soal)}
-                          className="
+                          <button
+                            onClick={() => openDeleteModal(soal)}
+                            className="
                             w-full text-left px-3.5 py-2
                             flex items-center gap-2
                             text-xs font-medium text-[var(--danger-text)]
                             hover:bg-[var(--danger-soft)]
                             transition-colors
                           "
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Hapus
-                        </button>
-                      </div>
-                    )}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Hapus
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* TITLE */}
-              <h3 className="font-heading text-base font-bold text-[var(--text)] leading-snug line-clamp-2">
-                {soal.judul}
-              </h3>
+                {/* TITLE */}
+                <h3 className="font-heading text-base font-bold text-[var(--text)] leading-snug line-clamp-2">
+                  {soal.judul}
+                </h3>
 
-              <p className="text-xs text-[var(--text-muted)] mt-1.5 mb-4 line-clamp-2 leading-relaxed">
-                {soal.deskripsi?.trim() ? soal.deskripsi : "Tidak ada deskripsi"}
-              </p>
+                <p className="text-xs text-[var(--text-muted)] mt-1.5 mb-4 line-clamp-2 leading-relaxed">
+                  {soal.deskripsi?.trim() ? soal.deskripsi : "Tidak ada deskripsi"}
+                </p>
 
-              {/* META */}
-              <div className="p-3 bg-[var(--bg)] rounded-xl border border-[var(--border-soft)] grid grid-cols-2 gap-2 mb-4">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] font-medium text-[var(--text-faint)] uppercase flex items-center gap-1">
-                    <CalendarDays className="w-3 h-3" />
-                    Dibuat
-                  </span>
-                  <span className="text-xs font-semibold text-[var(--text)]">
-                    {soal.createdAt
-                      ? new Date(soal.createdAt).toLocaleDateString("id-ID", {
+                {/* META */}
+                <div className="p-3 bg-[var(--bg)] rounded-xl border border-[var(--border-soft)] grid grid-cols-2 gap-2 mb-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium text-[var(--text-faint)] uppercase flex items-center gap-1">
+                      <CalendarDays className="w-3 h-3" />
+                      Dibuat
+                    </span>
+                    <span className="text-xs font-semibold text-[var(--text)]">
+                      {soal.createdAt
+                        ? new Date(soal.createdAt).toLocaleDateString("id-ID", {
                           day: "numeric",
                           month: "short",
                           year: "numeric",
                         })
-                      : "-"}
-                  </span>
+                        : "-"}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium text-[var(--text-faint)] uppercase flex items-center gap-1">
+                      <Users className="w-3 h-3" />
+                      Submisi
+                    </span>
+                    <span className="text-xs font-semibold text-[var(--text)]">
+                      {soal.submission?.length || 0} Mahasiswa
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] font-medium text-[var(--text-faint)] uppercase flex items-center gap-1">
-                    <Users className="w-3 h-3" />
-                    Submisi
-                  </span>
-                  <span className="text-xs font-semibold text-[var(--text)]">
-                    {soal.submission?.length || 0} Mahasiswa
-                  </span>
-                </div>
-              </div>
-
-              {/* RESULT BUTTON */}
-              <div className="mt-auto pt-3 border-t border-[var(--border-soft)]">
-                <Link
-                  href={`/output/${soal.id}/daftar-submission`}
-                  className="
+                {/* RESULT BUTTON */}
+                <div className="mt-auto pt-3 border-t border-[var(--border-soft)]">
+                  <Link
+                    href={`/output/${soal.id}/daftar-submission`}
+                    className="
                     w-full inline-flex items-center justify-center gap-1.5
                     py-2.5 px-3
                     bg-[var(--accent)] hover:bg-[var(--accent-hover)]
@@ -556,14 +622,66 @@ export default function SoalGrid({
                     shadow-xs
                     transition-all
                   "
-                >
-                  <span>Lihat Hasil &amp; Evaluasi</span>
-                  <ArrowRight className="w-[15px] h-[15px]" />
-                </Link>
+                  >
+                    <span>Lihat Hasil &amp; Evaluasi</span>
+                    <ArrowRight className="w-[15px] h-[15px]" />
+                  </Link>
+                </div>
               </div>
+            ))}
+          </div>
+
+          {/* ======================================================
+              PAGINATION — geser untuk lihat modul berikutnya
+          ====================================================== */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 px-1">
+            <span className="text-xs text-[var(--text-muted)] order-2 sm:order-1">
+              Menampilkan {rangeStart}-{rangeEnd} dari {filteredSoalList.length} modul
+            </span>
+
+            <div className="flex items-center gap-1.5 order-1 sm:order-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="
+                  flex items-center gap-1 px-3 py-2 rounded-xl
+                  text-xs font-bold
+                  border border-[var(--border)]
+                  text-[var(--text-muted)]
+                  hover:bg-[var(--accent-soft)] hover:text-[var(--accent-ink)]
+                  disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent
+                  transition-all
+                "
+                aria-label="Halaman sebelumnya"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Sebelumnya</span>
+              </button>
+
+              <span className="px-2 text-xs font-bold text-[var(--text)] tabular-nums whitespace-nowrap">
+                {currentPage} / {totalPages}
+              </span>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="
+                  flex items-center gap-1 px-3 py-2 rounded-xl
+                  text-xs font-bold
+                  border border-[var(--border)]
+                  text-[var(--text-muted)]
+                  hover:bg-[var(--accent-soft)] hover:text-[var(--accent-ink)]
+                  disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent
+                  transition-all
+                "
+                aria-label="Halaman berikutnya"
+              >
+                <span className="hidden sm:inline">Berikutnya</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
-          ))}
-        </div>
+          </div>
+        </>
       )}
 
       {/* ========================================================

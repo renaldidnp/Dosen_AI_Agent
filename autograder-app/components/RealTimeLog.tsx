@@ -38,6 +38,7 @@ const STATUS_STYLE: Record<
 };
 
 const POLL_INTERVAL_MS = 6000;
+const MAX_ENTRIES = 10;
 
 export default function RealTimeLog({
   endpoint = "/api/dashboard/activity-log",
@@ -61,14 +62,18 @@ export default function RealTimeLog({
       const data: { entries: ApiLogEntry[] } = await res.json();
 
       // Format waktu hanya setelah data diterima di client.
-      const withTime = data.entries.map((e) => ({
-        ...e,
-        timeLabel: new Date(e.createdAt).toLocaleTimeString("id-ID", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
-      }));
+      // Dibatasi ke MAX_ENTRIES terbaru saja supaya list tidak menumpuk
+      // tanpa batas — asumsi API sudah mengurutkan dari yang terbaru.
+      const withTime = data.entries
+        .slice(0, MAX_ENTRIES)
+        .map((e) => ({
+          ...e,
+          timeLabel: new Date(e.createdAt).toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          }),
+        }));
 
       setEntries(withTime);
       setError(null);
@@ -115,7 +120,7 @@ export default function RealTimeLog({
       </div>
 
       {/* LOG CONTENT */}
-      <div className="flex-1 divide-y divide-[var(--border-soft)] overflow-y-auto max-h-[520px]">
+      <div className="flex-1 divide-y divide-[var(--border-soft)] overflow-y-auto max-h-[360px] sm:max-h-[520px]">
         {loading ? (
           <div className="flex items-center justify-center gap-2 text-[var(--text-muted)] text-xs py-10">
             <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
@@ -164,9 +169,8 @@ export default function RealTimeLog({
                   </div>
 
                   <h3
-                    className={`text-sm font-semibold leading-snug ${
-                      entry.status === "done" ? "text-[var(--text-muted)]" : "text-[var(--text)]"
-                    }`}
+                    className={`text-sm font-semibold leading-snug ${entry.status === "done" ? "text-[var(--text-muted)]" : "text-[var(--text)]"
+                      }`}
                   >
                     {entry.title}
                   </h3>

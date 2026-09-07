@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyToken } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateSoalPdf } from "@/lib/generate-soal-pdf";
 import { uploadSoalPdf } from "@/lib/google-drive";
@@ -13,28 +14,69 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { judul, deskripsi, dosenId, kelasId, mataKuliah, googleFormId, googleFormUrl, driveFolderId, indikator } = body;
+  // 1. Ambil token JWT dari Cookie
+  const token = req.cookies.get("session_token")?.value; // Ganti 'token' jika nama cookie Anda berbeda
 
+  if (!token) {
+    return NextResponse.json(
+      { error: "Unauthorized. Cookie token tidak ditemukan." },
+      { status: 401 }
+    );
+  }
+
+  // 2. Verifikasi JWT Payload
+  const user = await verifyToken(token);
+
+  if (!user || !user.id) {
+    return NextResponse.json(
+      { error: "Unauthorized. Token tidak valid atau kedaluwarsa." },
+      { status: 401 }
+    );
+  }
+
+  // 3. Ambil data dari body request
+  const body = await req.json();
+  const { 
+    judul, 
+    deskripsi, 
+    kelasId, 
+    mataKuliah, 
+    googleFormId, 
+    googleFormUrl, 
+    driveFolderId, 
+    indikator 
+  } = body;
+
+  // 4. Simpan Soal dengan dosenId dari payload JWT (user.id)
   const soal = await db.soal.create({
     data: {
       judul,
       deskripsi,
-      dosenId,
+      dosenId: user.id, // Otomatis terdeteksi dari JWT Dosen yang login
       kelasId,
       mataKuliah,
       googleFormId,
       googleFormUrl,
       driveFolderId,
-      indikator: { create: indikator },
+      indikator: indikator ? { create: indikator } : undefined,
     },
     include: { indikator: true },
   });
 
+  // 5. Generate & Upload PDF Soal
   let pdfResult: { pdfUrl: string | null; pdfWarning?: string } = { pdfUrl: null };
   try {
-    const pdfBuffer = await generateSoalPdf({ judul: soal.judul, deskripsi: soal.deskripsi, indikator: soal.indikator });
-    const { fileId, webViewLink } = await uploadSoalPdf(pdfBuffer, `${soal.judul}.pdf`, soal.kelasId, soal.mataKuliah);
+    const pdfBuffer = await generateSoalPdf({ 
+      judul: soal.judul, 
+      deskripsi: soal.deskripsi, 
+      indikator: soal.indikator 
+    });
+    const { fileId, webViewLink } = await uploadSoalPdf(
+      pdfBuffer, 
+      `${soal.judul}.pdf`, 
+      soal.kelasId, 
+      soal.mataKuliah
+    );
 
     await db.soal.update({
       where: { id: soal.id },
@@ -46,8 +88,7 @@ export async function POST(req: NextRequest) {
     pdfResult = { pdfUrl: null, pdfWarning: "PDF gagal dibuat, coba generate ulang." };
   }
 
-  // Kirim notifikasi email ke semua mahasiswa di kelas ini — dibungkus try/catch
-  // terpisah supaya kalau email gagal, response tetap 201 (soal-nya sudah tersimpan)
+  // 6. Kirim Notifikasi Email ke Mahasiswa
   let notifikasiInfo: { terkirim: number; gagal: number; dilewati?: string } = { terkirim: 0, gagal: 0 };
 
   if (!soal.kelasId) {

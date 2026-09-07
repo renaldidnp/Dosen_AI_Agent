@@ -24,20 +24,20 @@ export async function GET() {
     const entries = submissions.map((s) => {
       let status: "running" | "queued" | "done" = "queued";
       let code = "SYS.QUEUE";
-      let detail = `Menunggu diproses — ${s.soal?.judul ?? "Soal"}`;
+      let detail = `Menunggu diproses - ${s.soal?.judul ?? "Soal"}`;
 
       if (s.status === "diproses") {
         status = "running";
         code = "AI.GRADE_EXEC";
-        detail = `Sedang dikoreksi AI — ${s.soal?.judul ?? "Soal"}`;
+        detail = `Sedang dikoreksi AI - ${s.soal?.judul ?? "Soal"}`;
       } else if (s.status === "selesai") {
         status = "done";
         code = s.hasilKoreksi?.emailTerkirim ? "MAIL.SENT" : "AI.GRADE_DONE";
         const skor = s.hasilKoreksi?.skorTotal;
         detail =
           skor !== undefined && skor !== null
-            ? `Selesai dikoreksi — skor ${skor} — ${s.soal?.judul ?? "Soal"}`
-            : `Selesai dikoreksi — ${s.soal?.judul ?? "Soal"}`;
+            ? `Selesai dikoreksi - skor ${skor} - ${s.soal?.judul ?? "Soal"}`
+            : `Selesai dikoreksi - ${s.soal?.judul ?? "Soal"}`;
       }
 
       return {

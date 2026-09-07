@@ -40,7 +40,7 @@ export default async function NilaiPage({ params, searchParams }: { params: { su
       <div>
         <h1 className="text-xl font-bold">{submission.soal.judul}</h1>
         <p className="text-gray-500">
-          {submission.namaMahasiswa} — {submission.nim}
+          {submission.namaMahasiswa} - {submission.nim}
         </p>
       </div>
 

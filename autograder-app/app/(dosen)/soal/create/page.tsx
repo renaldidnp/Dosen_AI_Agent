@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { ArrowLeft, Bot, Loader2, Plus, Send, Sparkles, Trash2, User, Wand2 } from "lucide-react";
 
 type IndikatorInput = { nama: string; bobot: number; rubrik: string; skorMax: number };
@@ -39,11 +40,6 @@ export default function CreateSoalPage() {
   ]);
   const [chatInput, setChatInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isThinking]);
 
   useEffect(() => {
     async function loadKelas() {
@@ -156,50 +152,29 @@ export default function CreateSoalPage() {
   }
 
   const inputClass =
-    "w-full rounded-[2px] border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] outline-none transition-all focus:border-[var(--accent)] focus:shadow-[0_0_0_1px_var(--accent-soft)] disabled:opacity-40";
+    "w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] outline-none transition-all focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] disabled:opacity-40";
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] relative transition-colors duration-300">
-      {/* Background grid */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            "linear-gradient(var(--accent) 1px, transparent 1px), linear-gradient(90deg, var(--accent) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-          opacity: "var(--grid-opacity)",
-        }}
-      />
-      {/* Radial glow */}
-      <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full pointer-events-none"
-        style={{ background: "var(--glow-radial)" }}
-      />
-
-      <div className="relative mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10">
+    <div className="min-h-screen bg-[var(--bg)] transition-colors duration-300">
+      <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10">
         <header className="relative mb-6 pr-14 sm:mb-8 sm:pr-0">
           <div>
-            <div className="font-mono text-[11px] text-[var(--accent-ink)] tracking-widest uppercase flex items-center gap-2 mb-2">
-              <span
-                className="w-1.5 h-1.5 bg-[var(--accent)] rounded-[2px]"
-                style={{ boxShadow: "0 0 8px var(--accent)" }}
-              />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-ink)] text-xs font-semibold mb-2">
+              <Sparkles className="w-[15px] h-[15px]" />
               Manajemen Soal
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight text-[var(--text)] sm:text-3xl lg:text-[32px]">
-              Buat{" "}
-              <span className="text-[var(--accent-ink)]" style={{ textShadow: "0 0 10px var(--accent)" }}>
-                Soal Baru_
-              </span>
+            <h1 className="font-heading text-2xl font-bold tracking-tight text-[var(--text)] sm:text-3xl">
+              Buat Soal Baru
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
-              Susun soal secara manual, atau minta AI Assistant menyusunkan draf lengkap dengan indikator penilaiannya.
+              Susun soal secara manual, atau minta AI Assistant menyusunkan draf lengkap
+              dengan indikator penilaiannya.
             </p>
           </div>
 
           <button
             onClick={() => router.push("/dashboard")}
-            className="absolute right-0 top-0 inline-flex items-center gap-2 rounded-[2px] border border-[var(--border)] bg-[var(--border-soft)] p-2 font-mono text-xs uppercase tracking-wider text-[var(--text-muted)] transition-all hover:border-[var(--accent-border)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-ink)] sm:px-4 sm:py-2.5"
+            className="absolute right-0 top-0 inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-panel)] p-2 text-xs font-semibold text-[var(--text-muted)] shadow-xs transition-all hover:border-[var(--accent-border)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-ink)] sm:px-4 sm:py-2.5"
             aria-label="Kembali"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" />
@@ -210,14 +185,11 @@ export default function CreateSoalPage() {
         <div className="grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-5 xl:grid-cols-[minmax(0,1fr)_420px] 2xl:grid-cols-[minmax(0,1fr)_460px]">
           {/* Form column */}
           <div className="lg:col-span-3 xl:col-span-1 space-y-5 sm:space-y-6 min-w-0">
-            <section className="relative rounded-[4px] border border-[var(--accent-border)] bg-[var(--bg-panel-translucent)] backdrop-blur-xl p-6 transition-colors duration-300">
-              <span className="absolute top-[-1px] left-[-1px] w-3 h-3 border-t-2 border-l-2 border-[var(--accent-border-strong)]" />
-              <span className="absolute bottom-[-1px] right-[-1px] w-3 h-3 border-b-2 border-r-2 border-[var(--accent-border-strong)]" />
-
+            <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-panel)] shadow-xs p-6 transition-colors duration-300">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="font-mono text-sm text-[var(--accent-ink)] uppercase tracking-widest">Detail Soal</h2>
+                <h2 className="font-heading text-sm font-bold text-[var(--text)]">Detail Soal</h2>
                 {isDraftApplied && (
-                  <span className="inline-flex items-center rounded-[2px] border border-[var(--accent-border)] bg-[var(--accent-soft)] px-2.5 py-0.5 text-[11px] font-mono uppercase tracking-wider text-[var(--accent-ink)]">
+                  <span className="inline-flex items-center rounded-full border border-[var(--success-border)] bg-[var(--success-soft)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--success-ink)]">
                     Draf Posting Aktif
                   </span>
                 )}
@@ -225,7 +197,7 @@ export default function CreateSoalPage() {
               <div className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block font-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest">
+                    <label className="mb-1.5 block text-xs font-bold text-[var(--text-muted)]">
                       Kelas
                     </label>
                     <select
@@ -254,7 +226,7 @@ export default function CreateSoalPage() {
                     )}
                   </div>
                   <div>
-                    <label className="mb-1.5 block font-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest">
+                    <label className="mb-1.5 block text-xs font-bold text-[var(--text-muted)]">
                       Mata Kuliah
                     </label>
                     <input
@@ -266,7 +238,7 @@ export default function CreateSoalPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1.5 block font-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest">
+                  <label className="mb-1.5 block text-xs font-bold text-[var(--text-muted)]">
                     Judul soal
                   </label>
                   <input
@@ -277,7 +249,7 @@ export default function CreateSoalPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block font-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest">
+                  <label className="mb-1.5 block text-xs font-bold text-[var(--text-muted)]">
                     Deskripsi soal
                   </label>
                   <textarea
@@ -289,7 +261,7 @@ export default function CreateSoalPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block font-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest">
+                  <label className="mb-1.5 block text-xs font-bold text-[var(--text-muted)]">
                     Link Google Form
                   </label>
                   <input
@@ -302,20 +274,17 @@ export default function CreateSoalPage() {
               </div>
             </section>
 
-            <section className="relative rounded-[4px] border border-[var(--accent-border)] bg-[var(--bg-panel-translucent)] backdrop-blur-xl p-6 transition-colors duration-300">
-              <span className="absolute top-[-1px] left-[-1px] w-3 h-3 border-t-2 border-l-2 border-[var(--accent-border-strong)]" />
-              <span className="absolute bottom-[-1px] right-[-1px] w-3 h-3 border-b-2 border-r-2 border-[var(--accent-border-strong)]" />
-
+            <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-panel)] shadow-xs p-6 transition-colors duration-300">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="font-mono text-sm text-[var(--accent-ink)] uppercase tracking-widest">Indikator Penilaian</h2>
-                <span className="rounded-[2px] border border-[var(--border)] bg-[var(--border-soft)] px-2.5 py-1 font-mono text-[11px] text-[var(--text-muted)]">
+                <h2 className="font-heading text-sm font-bold text-[var(--text)]">Indikator Penilaian</h2>
+                <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[11px] font-bold text-[var(--accent-ink)]">
                   {indikator.length} indikator
                 </span>
               </div>
 
               <div className="space-y-3">
                 {indikator.map((ind, i) => (
-                  <div key={i} className="group relative rounded-[4px] border border-[var(--border)] bg-[var(--bg)]/60 p-4">
+                  <div key={i} className="group relative rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4">
                     {indikator.length > 1 && (
                       <button
                         onClick={() => removeIndikator(i)}
@@ -340,7 +309,7 @@ export default function CreateSoalPage() {
                           value={ind.bobot}
                           onChange={(e) => updateIndikator(i, "bobot", Number(e.target.value))}
                         />
-                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs text-[var(--text-faint)]">
+                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-faint)]">
                           %
                         </span>
                       </div>
@@ -358,7 +327,7 @@ export default function CreateSoalPage() {
 
               <button
                 onClick={addIndikator}
-                className="mt-3 flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-[var(--accent-ink)] transition hover:text-[var(--text)]"
+                className="mt-3 flex items-center gap-1.5 text-xs font-bold text-[var(--accent-ink)] transition hover:text-[var(--accent-hover)]"
               >
                 <Plus className="h-4 w-4" />
                 Tambah indikator
@@ -368,17 +337,14 @@ export default function CreateSoalPage() {
             <div className="flex flex-row justify-end gap-3">
               <button
                 onClick={() => router.push("/dashboard")}
-                className="flex-1 rounded-[2px] border border-[var(--border)] px-4 py-2.5 text-center font-mono text-xs uppercase tracking-wider text-[var(--text-muted)] transition hover:border-[var(--border-strong)] hover:bg-[var(--border-soft)] hover:text-[var(--text)] sm:flex-initial"
+                className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-center text-xs font-bold text-[var(--text-muted)] transition hover:bg-[var(--accent-soft)] hover:text-[var(--text)] sm:flex-initial"
               >
                 Batal
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={saving || !judul}
-                className="flex flex-1 items-center justify-center gap-2 rounded-[2px] border border-[var(--accent)] bg-[var(--accent-soft)] px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-[var(--accent-ink)] transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-initial"
-                style={{ boxShadow: "0 0 0 rgba(0,0,0,0)" }}
-                onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 0 10px var(--accent-border)")}
-                onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 0 0 rgba(0,0,0,0)")}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-2.5 text-xs font-bold text-[var(--accent-fg)] shadow-xs transition-all hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-40 sm:flex-initial"
               >
                 {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                 Simpan Soal
@@ -388,20 +354,14 @@ export default function CreateSoalPage() {
 
           {/* AI chat column */}
           <div className="lg:col-span-2 xl:col-span-1 min-w-0">
-            <div className="flex h-[560px] flex-col rounded-[4px] border border-[var(--accent-border)] bg-[var(--bg-panel-translucent)] backdrop-blur-xl relative lg:sticky lg:top-8 lg:h-[calc(100vh-7rem)] lg:max-h-[820px] transition-colors duration-300">
-              <span className="absolute top-[-1px] left-[-1px] w-3 h-3 border-t-2 border-l-2 border-[var(--accent-border-strong)]" />
-              <span className="absolute bottom-[-1px] right-[-1px] w-3 h-3 border-b-2 border-r-2 border-[var(--accent-border-strong)]" />
-
-              <div className="flex items-center gap-2.5 border-b border-[var(--border)] px-5 py-4">
-                <div
-                  className="flex h-9 w-9 items-center justify-center rounded-[2px] border border-[var(--accent-border)] bg-[var(--accent-soft)]"
-                  style={{ boxShadow: "0 0 10px var(--accent-border)" }}
-                >
+            <div className="flex h-[560px] flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-panel)] shadow-xs lg:sticky lg:top-8 lg:h-[calc(100vh-7rem)] lg:max-h-[820px] transition-colors duration-300">
+              <div className="flex items-center gap-2.5 border-b border-[var(--border-soft)] px-5 py-4">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent-soft)]">
                   <Sparkles className="h-4 w-4 text-[var(--accent-ink)]" />
                 </div>
                 <div>
-                  <p className="font-mono text-sm text-[var(--text)] uppercase tracking-wide">AI Assistant</p>
-                  <p className="text-xs text-[var(--text-muted)]">Bantu susun soal & indikator otomatis</p>
+                  <p className="font-heading text-sm font-bold text-[var(--text)]">AI Assistant</p>
+                  <p className="text-xs text-[var(--text-muted)]">Bantu susun soal &amp; indikator otomatis</p>
                 </div>
               </div>
 
@@ -409,11 +369,10 @@ export default function CreateSoalPage() {
                 {messages.map((m) => (
                   <div key={m.id} className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
                     <div
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[2px] border ${
-                        m.role === "user"
-                          ? "border-[var(--border)] bg-[var(--border-soft)]"
-                          : "border-[var(--accent-border)] bg-[var(--accent-soft)]"
-                      }`}
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${m.role === "user"
+                          ? "bg-[var(--border-soft)]"
+                          : "bg-[var(--accent-soft)]"
+                        }`}
                     >
                       {m.role === "user" ? (
                         <User className="h-3.5 w-3.5 text-[var(--text-muted)]" />
@@ -423,18 +382,17 @@ export default function CreateSoalPage() {
                     </div>
                     <div className={`flex max-w-[85%] flex-col gap-2 ${m.role === "user" ? "items-end" : "items-start"}`}>
                       <div
-                        className={`rounded-[4px] px-3.5 py-2.5 text-sm leading-relaxed ${
-                          m.role === "user"
+                        className={`rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${m.role === "user"
                             ? "bg-[var(--accent-soft)] border border-[var(--accent-border)] text-[var(--text)]"
-                            : "bg-[var(--border-soft)] border border-[var(--border)] text-[var(--text-muted)]"
-                        }`}
+                            : "bg-[var(--bg)] border border-[var(--border)] text-[var(--text-muted)]"
+                          }`}
                       >
                         {m.content}
                       </div>
                       {m.draft && (
                         <button
                           onClick={() => applyDraft(m.draft!)}
-                          className="flex items-center gap-1.5 self-start rounded-[2px] border border-[var(--accent-border)] bg-[var(--accent-soft)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-wide text-[var(--accent-ink)] transition hover:brightness-110"
+                          className="flex items-center gap-1.5 self-start rounded-xl border border-[var(--accent-border)] bg-[var(--accent-soft)] px-3 py-1.5 text-[11px] font-bold text-[var(--accent-ink)] transition hover:bg-[var(--accent)] hover:text-[var(--accent-fg)]"
                         >
                           <Wand2 className="h-3.5 w-3.5" />
                           Gunakan draf ini di form
@@ -446,21 +404,20 @@ export default function CreateSoalPage() {
 
                 {isThinking && (
                   <div className="flex gap-3">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[2px] border border-[var(--accent-border)] bg-[var(--accent-soft)]">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)]">
                       <Bot className="h-3.5 w-3.5 text-[var(--accent-ink)]" />
                     </div>
-                    <div className="flex items-center gap-1 rounded-[4px] border border-[var(--border)] bg-[var(--border-soft)] px-4 py-3">
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--accent-border)] [animation-delay:-0.3s]" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--accent-border)] [animation-delay:-0.15s]" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--accent-border)]" />
+                    <div className="flex items-center gap-1 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3">
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--accent)] [animation-delay:-0.3s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--accent)] [animation-delay:-0.15s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--accent)]" />
                     </div>
                   </div>
                 )}
-                <div ref={chatEndRef} />
               </div>
 
-              <div className="border-t border-[var(--border)] p-3">
-                <div className="flex items-end gap-2 rounded-[4px] border border-[var(--border)] bg-[var(--bg)] p-2 focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_1px_var(--accent-soft)] transition-all">
+              <div className="border-t border-[var(--border-soft)] p-3">
+                <div className="flex items-end gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2 transition-all focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-soft)]">
                   <textarea
                     rows={1}
                     className="max-h-32 flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] outline-none"
@@ -477,7 +434,7 @@ export default function CreateSoalPage() {
                   <button
                     onClick={handleSendChat}
                     disabled={!chatInput.trim() || isThinking}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[2px] border border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-ink)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 disabled:border-[var(--border)] disabled:text-[var(--text-faint)]"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] transition hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:bg-[var(--border-soft)] disabled:text-[var(--text-faint)]"
                     aria-label="Kirim"
                   >
                     <Send className="h-4 w-4" />

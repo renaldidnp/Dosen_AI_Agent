@@ -66,30 +66,39 @@ export default function CreateSoalPage() {
     setIndikator(next);
   }
 
-  async function handleSubmit() {
-    setSaving(true);
-    try {
-      const res = await fetch("/api/soal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          judul,
-          deskripsi,
-          googleFormUrl,
-          dosenId: "clx1abc123realid",
-          kelasId: kelasId || null,
-          mataKuliah: mataKuliah.trim() || null,
-          indikator,
-        }),
-      });
-      if (res.ok) {
-        router.refresh();
-        router.push("/dashboard");
-      }
-    } finally {
-      setSaving(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+async function handleSubmit() {
+  setSaving(true);
+  setSubmitError(null);
+  try {
+    const res = await fetch("/api/soal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        judul,
+        deskripsi,
+        googleFormUrl,
+        kelasId: kelasId || null,
+        mataKuliah: mataKuliah.trim() || null,
+        indikator,
+      }),
+    });
+
+    if (res.ok) {
+      router.refresh();
+      router.push("/dashboard");
+      return;
     }
+
+    const data = await res.json().catch(() => null);
+    setSubmitError(data?.error ?? "Gagal menyimpan soal. Silakan coba lagi.");
+  } catch {
+    setSubmitError("Terjadi kendala jaringan. Periksa koneksi Anda.");
+  } finally {
+    setSaving(false);
   }
+}
 
   async function handleSendChat() {
     const prompt = chatInput.trim();
@@ -317,7 +326,9 @@ export default function CreateSoalPage() {
                 Tambah indikator
               </button>
             </section>
-
+            {submitError && (
+              <p className="text-xs font-semibold text-[var(--danger-text)]">{submitError}</p>
+            )}
             <div className="flex flex-row justify-end gap-3">
               <button
                 onClick={() => router.push("/dashboard")}

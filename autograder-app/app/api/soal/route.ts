@@ -55,6 +55,20 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (!kelasId || typeof kelasId !== "string") {
+    return NextResponse.json(
+      { error: "Kelas wajib dipilih." },
+      { status: 400 }
+    );
+  }
+
+  if (!mataKuliah || typeof mataKuliah !== "string" || !mataKuliah.trim()) {
+    return NextResponse.json(
+      { error: "Mata kuliah wajib diisi." },
+      { status: 400 }
+    );
+  }
+
   if (!Array.isArray(indikator) || indikator.length === 0) {
     return NextResponse.json(
       { error: "Minimal harus ada satu indikator penilaian." },
@@ -97,7 +111,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 5. Simpan Soal dengan dosenId dari payload JWT (user.id)
+    // 5. Simpan Soal dengan dosenId dari payload JWT (user.id)
   let soal;
   try {
     soal = await db.soal.create({
@@ -105,8 +119,8 @@ export async function POST(req: NextRequest) {
         judul: judul.trim(),
         deskripsi,
         dosenId: user.id,
-        kelasId: kelasId || null,
-        mataKuliah,
+        kelasId,
+        mataKuliah: mataKuliah.trim(),
         googleFormId,
         googleFormUrl,
         driveFolderId,

@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ArrowLeft, Bot, Loader2, Plus, Send, Sparkles, Trash2, User, Wand2 } from "lucide-react";
+import { ArrowLeft, Bot, Loader2, Plus, Send, Sparkles, Trash2, User, Wand2, X } from "lucide-react";
 
 type IndikatorInput = { nama: string; bobot: number; rubrik: string; skorMax: number };
 type ChatRole = "user" | "assistant";
@@ -162,6 +162,38 @@ async function handleSubmit() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] transition-colors duration-300">
+      {submitError && (
+  <div className="fixed right-4 top-4 z-50 w-full max-w-sm animate-in slide-in-from-top-2 fade-in duration-300 sm:right-6 sm:top-6">
+    <div className="flex items-start gap-3 rounded-xl border border-[var(--danger-border)] bg-[var(--bg-panel)] p-4 shadow-lg">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--danger-soft)]">
+        <svg
+          className="h-4 w-4 text-[var(--danger-text)]"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+          />
+        </svg>
+      </div>
+      <div className="min-w-0 flex-1 pt-1">
+        <p className="text-sm font-semibold text-[var(--text)]">Gagal menyimpan soal</p>
+        <p className="mt-0.5 text-xs text-[var(--text-muted)]">{submitError}</p>
+      </div>
+      <button
+        onClick={() => setSubmitError(null)}
+        className="shrink-0 rounded-lg p-1 text-[var(--text-faint)] transition hover:bg-[var(--border-soft)] hover:text-[var(--text)]"
+        aria-label="Tutup notifikasi"
+      >
+        <X className="h-4 w-4" />
+      </button>
+    </div>
+  </div>
+)}
       <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 xl:px-10">
         <header className="relative mb-6 pr-14 sm:mb-8 sm:pr-0">
           <div>
@@ -174,7 +206,6 @@ async function handleSubmit() {
             </p>
           </div>
         </header>
-
         <div className="grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-5 xl:grid-cols-[minmax(0,1fr)_420px] 2xl:grid-cols-[minmax(0,1fr)_460px]">
           {/* Form column — di bawah pada mobile/tablet, kiri pada desktop */}
           <div className="order-2 lg:order-1 lg:col-span-3 xl:col-span-1 space-y-5 sm:space-y-6 min-w-0">
@@ -200,7 +231,7 @@ async function handleSubmit() {
                       disabled={loadingKelas}
                     >
                       <option value="" className="bg-[var(--bg-panel)]">
-                        {loadingKelas ? "Memuat kelas..." : kelasList.length === 0 ? "Belum ada kelas" : "Pilih kelas (opsional)"}
+                        {loadingKelas ? "Memuat kelas..." : kelasList.length === 0 ? "Belum ada kelas" : "Pilih kelas"}
                       </option>
                       {kelasList.map((k) => (
                         <option key={k.id} value={k.id} className="bg-[var(--bg-panel)]">
@@ -326,9 +357,6 @@ async function handleSubmit() {
                 Tambah indikator
               </button>
             </section>
-            {submitError && (
-              <p className="text-xs font-semibold text-[var(--danger-text)]">{submitError}</p>
-            )}
             <div className="flex flex-row justify-end gap-3">
               <button
                 onClick={() => router.push("/dashboard")}

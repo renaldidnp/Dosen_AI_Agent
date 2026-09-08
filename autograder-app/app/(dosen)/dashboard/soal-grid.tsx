@@ -19,7 +19,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const PAGE_SIZE = 9;
+const PAGE_SIZE = 6;
 
 type FilterTab = "all" | "active" | "draft";
 
@@ -636,7 +636,7 @@ export default function SoalGrid({
           ====================================================== */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 px-1">
             <span className="text-xs text-[var(--text-muted)] order-2 sm:order-1">
-              Menampilkan {rangeStart}-{rangeEnd} dari {filteredSoalList.length} modul
+              Menampilkan {rangeStart} -  {rangeEnd} dari {filteredSoalList.length} modul
             </span>
 
             <div className="flex items-center gap-1.5 order-1 sm:order-2">

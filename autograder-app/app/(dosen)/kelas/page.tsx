@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Loader2, Pencil, Plus, School, Sparkles, Trash2, X } from "lucide-react";
+import { Loader2, Pencil, Plus, School, Trash2, X } from "lucide-react";
 
 type Kelas = { id: string; nama: string; angkatan: string; createdAt: string };
 
@@ -122,114 +122,108 @@ export default function KelasPage() {
     "w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3.5 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] outline-none transition-all focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)] disabled:opacity-40";
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] transition-colors duration-300">
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
-        <header className="mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent-soft)] text-[var(--accent-ink)] text-xs font-semibold mb-2">
-            <Sparkles className="w-[15px] h-[15px]" />
-            Manajemen Kelas
+    <div className="w-full max-w-[1600px] mx-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <header className="mb-6 sm:mb-8">
+        <h1 className="font-heading text-2xl font-bold tracking-tight text-[var(--text)] sm:text-3xl">
+          Kelas
+        </h1>
+        <p className="mt-2 text-sm text-[var(--text-muted)]">
+          Kelola daftar kelas per angkatan. Digunakan untuk mengelompokkan mahasiswa,
+          soal, dan folder PDF di Google Drive.
+        </p>
+      </header>
+
+      {/* Tambah kelas */}
+      <section className="mb-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-panel)] p-4 sm:p-6 shadow-xs">
+        <h2 className="mb-4 font-heading text-sm font-bold text-[var(--text)]">
+          Tambah Kelas Baru
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-[1fr_140px_auto]">
+          <input
+            className={inputClass}
+            placeholder="Nama kelas, contoh: TI-A"
+            value={nama}
+            onChange={(e) => setNama(e.target.value)}
+          />
+          <input
+            className={inputClass}
+            placeholder="Angkatan, contoh: 2024"
+            value={angkatan}
+            onChange={(e) => setAngkatan(e.target.value)}
+          />
+          <button
+            onClick={handleAdd}
+            disabled={saving}
+            className="flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-bold text-[var(--accent-fg)] shadow-xs transition-all hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            Tambah
+          </button>
+        </div>
+        {error && <p className="mt-2 text-sm text-[var(--danger-text)]">{error}</p>}
+      </section>
+
+      {/* Daftar kelas */}
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-panel)] p-4 sm:p-6 shadow-xs">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-heading text-sm font-bold text-[var(--text)]">Daftar Kelas</h2>
+          <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-xs font-bold text-[var(--accent-ink)]">
+            {kelasList.length} kelas
+          </span>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-10 text-[var(--text-faint)]">
+            <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" />
           </div>
-          <h1 className="font-heading text-2xl font-bold tracking-tight text-[var(--text)] sm:text-3xl">
-            Kelas
-          </h1>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">
-            Kelola daftar kelas per angkatan. Digunakan untuk mengelompokkan mahasiswa,
-            soal, dan folder PDF di Google Drive.
+        ) : kelasList.length === 0 ? (
+          <p className="py-6 text-center text-sm text-[var(--text-faint)]">
+            Belum ada kelas. Tambahkan kelas pertama di atas.
           </p>
-        </header>
-
-        {/* Tambah kelas */}
-        <section className="mb-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-panel)] p-6 shadow-xs">
-          <h2 className="mb-4 font-heading text-sm font-bold text-[var(--text)]">
-            Tambah Kelas Baru
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-[1fr_140px_auto]">
-            <input
-              className={inputClass}
-              placeholder="Nama kelas, contoh: TI-A"
-              value={nama}
-              onChange={(e) => setNama(e.target.value)}
-            />
-            <input
-              className={inputClass}
-              placeholder="Angkatan, contoh: 2024"
-              value={angkatan}
-              onChange={(e) => setAngkatan(e.target.value)}
-            />
-            <button
-              onClick={handleAdd}
-              disabled={saving}
-              className="flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-bold text-[var(--accent-fg)] shadow-xs transition-all hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Tambah
-            </button>
-          </div>
-          {error && <p className="mt-2 text-sm text-[var(--danger-text)]">{error}</p>}
-        </section>
-
-        {/* Daftar kelas */}
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--bg-panel)] p-6 shadow-xs">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-heading text-sm font-bold text-[var(--text)]">Daftar Kelas</h2>
-            <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-xs font-bold text-[var(--accent-ink)]">
-              {kelasList.length} kelas
-            </span>
-          </div>
-
-          {loading ? (
-            <div className="flex items-center justify-center py-10 text-[var(--text-faint)]">
-              <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" />
-            </div>
-          ) : kelasList.length === 0 ? (
-            <p className="py-6 text-center text-sm text-[var(--text-faint)]">
-              Belum ada kelas. Tambahkan kelas pertama di atas.
-            </p>
-          ) : (
-            <ul className="divide-y divide-[var(--border-soft)]">
-              {kelasList.map((k) => (
-                <li key={k.id} className="flex items-center justify-between py-3">
-                  <Link
-                    href={`/kelas/${k.id}`}
-                    className="flex items-center gap-3 group min-w-0 flex-1 rounded-xl transition-colors hover:bg-[var(--accent-soft)]/40 -mx-2 px-2 py-1"
-                  >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)]">
-                      <School className="h-4 w-4 text-[var(--accent-ink)]" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors truncate">
-                        {k.nama}
-                      </p>
-                      <p className="text-xs text-[var(--text-faint)]">Angkatan {k.angkatan}</p>
-                    </div>
-                  </Link>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => openEditModal(k)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-faint)] transition hover:bg-[var(--accent-soft)] hover:text-[var(--accent-ink)]"
-                      aria-label="Edit kelas"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(k.id)}
-                      disabled={deletingId === k.id}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-faint)] transition hover:bg-[var(--danger-soft)] hover:text-[var(--danger-text)] disabled:cursor-not-allowed disabled:opacity-50"
-                      aria-label="Hapus kelas"
-                    >
-                      {deletingId === k.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                    </button>
+        ) : (
+          <ul className="divide-y divide-[var(--border-soft)]">
+            {kelasList.map((k) => (
+              <li key={k.id} className="flex items-center justify-between py-3">
+                <Link
+                  href={`/kelas/${k.id}`}
+                  className="flex items-center gap-3 group min-w-0 flex-1 rounded-xl transition-colors hover:bg-[var(--accent-soft)]/40 -mx-2 px-2 py-1"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)]">
+                    <School className="h-4 w-4 text-[var(--accent-ink)]" />
                   </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent-ink)] transition-colors truncate">
+                      {k.nama}
+                    </p>
+                    <p className="text-xs text-[var(--text-faint)]">Angkatan {k.angkatan}</p>
+                  </div>
+                </Link>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => openEditModal(k)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-faint)] transition hover:bg-[var(--accent-soft)] hover:text-[var(--accent-ink)]"
+                    aria-label="Edit kelas"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(k.id)}
+                    disabled={deletingId === k.id}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-faint)] transition hover:bg-[var(--danger-soft)] hover:text-[var(--danger-text)] disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label="Hapus kelas"
+                  >
+                    {deletingId === k.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {/* Modal Edit Kelas */}
       {editingKelas && (

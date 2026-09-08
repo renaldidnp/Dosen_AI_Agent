@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const kelas = await db.kelas.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!kelas) {
+      return NextResponse.json({ error: "Kelas tidak ditemukan" }, { status: 404 });
+    }
+
+    return NextResponse.json(kelas);
+  } catch (err) {
+    console.error("Gagal mengambil data kelas:", err);
+    return NextResponse.json({ error: "Gagal mengambil data kelas" }, { status: 500 });
+  }
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const body = await req.json();
   const { nama, angkatan } = body;

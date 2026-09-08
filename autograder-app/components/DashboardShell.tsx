@@ -23,7 +23,7 @@ import { useTheme } from "@/app/theme-provider";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Beranda", icon: LayoutDashboard },
-  { href: "/soal", label: "Bank Soal", icon: Database },
+  { href: "/soal/create", label: "Bank Soal", icon: Database },
   { href: "/kelas", label: "Kelas & Mahasiswa", icon: School },
   { href: "/settings", label: "Pengaturan", icon: Settings },
 ];
@@ -167,28 +167,8 @@ export default function DashboardShell({
           </div>
         </div>
 
-        {/* Bottom: AI Copilot status + system links */}
+        {/* Bottom: system links */}
         <div className="px-4 py-5 border-t border-[var(--border-soft)] bg-[var(--bg)]/40 shrink-0">
-          <div
-            className="
-              p-3 mb-3
-              bg-[var(--accent-soft)]
-              rounded-xl border border-[var(--accent-border)]
-              flex items-center gap-3
-            "
-          >
-            <div className="w-8 h-8 rounded-lg bg-[var(--accent)] text-[var(--accent-fg)] flex items-center justify-center shrink-0">
-              <Sparkles className="w-[18px] h-[18px]" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-xs font-bold text-[var(--accent-ink)] leading-tight">
-                AI Copilot
-              </div>
-              <div className="text-[11px] text-[var(--text-muted)] font-medium truncate">
-                Model aktif &amp; siap
-              </div>
-            </div>
-          </div>
 
           <nav className="flex flex-col gap-1">
             <button

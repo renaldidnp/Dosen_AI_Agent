@@ -1,16 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyToken } from "@/lib/auth";
 
 const AGENT_URL = process.env.AUTOGRADER_AGENT_URL ?? "http://localhost:4000";
 const AGENT_SECRET = process.env.AGENT_SECRET;
 
 export async function POST(req: NextRequest) {
-  // TODO: ganti dengan pengecekan session dosen yang sesungguhnya
-  // const session = await getServerSession(...);
-  // if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // 1. Ambil token JWT dari Cookie
+  const token = req.cookies.get("session_token")?.value;
 
+  if (!token) {
+    return NextResponse.json(
+      { error: "Unauthorized. Cookie token tidak ditemukan." },
+      { status: 401 }
+    );
+  }
+
+  // 2. Verifikasi JWT Payload
+  const user = await verifyToken(token);
+
+  if (!user || !user.id) {
+    return NextResponse.json(
+      { error: "Unauthorized. Token tidak valid atau kedaluwarsa." },
+      { status: 401 }
+    );
+  }
+
+  // 3. Ambil & validasi body
   const body = await req.json().catch(() => null);
 
-  if (!body?.prompt || typeof body.prompt !== "string") {
+  if (!body?.prompt || typeof body.prompt !== "string" || !body.prompt.trim()) {
     return NextResponse.json({ error: "Field 'prompt' wajib diisi" }, { status: 400 });
   }
 

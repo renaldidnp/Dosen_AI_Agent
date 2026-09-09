@@ -92,8 +92,26 @@ model Submission {
   accessToken     String   @unique @default(cuid())
 
   hasilKoreksi    HasilKoreksi?
+  traces          GradingTrace[]
 
   createdAt       DateTime @default(now())
+}
+
+model GradingTrace {
+  id           String   @id @default(cuid())
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id])
+
+  step         String   // download | pass1 | pass2 | callback | mail | error
+  status       String   // running | done | error
+  detail       String?
+  provider     String?
+  model        String?
+  durationMs   Int?
+
+  createdAt    DateTime @default(now())
+
+  @@index([submissionId, createdAt])
 }
 
 model HasilKoreksi {

@@ -11,6 +11,7 @@ Sistem autograding berbasis AI untuk dosen perguruan tinggi di Indonesia. SwaKor
 - **Link Submit Tanpa Login** — Setiap soal punya link submit unik bertoken yang bisa dibatasi masa berlakunya
 - **Email Otomatis** — Link submit dikirim ke mahasiswa dan hasil koreksi dikirim via Resend
 - **Asynchronous Pipeline** — Grading diproses secara async, hasil dikirim via callback
+- **Live Trace AI** — Dashboard menampilkan langkah agent secara real-time (unduh → Pass 1 → Pass 2 → callback → email) lengkap dengan durasi & provider; timeline per submission juga tersedia
 - **Dark/Light Theme** — UI modern dengan dukungan tema gelap dan terang
 - **AI Chat Assistant** — Bantuan pembuatan soal dan rubrik melalui chat dengan AI
 
@@ -254,6 +255,7 @@ Dosen bisa menggunakan AI Chat Assistant saat membuat soal. Cukup deskripsikan s
 | Method | Endpoint | Deskripsi |
 |--------|----------|-----------|
 | POST | `/api/webhook/grade-callback` | Callback hasil grading dari Agent |
+| POST | `/api/webhook/trace` | Live trace: progres langkah grading dari Agent (download → pass1 → pass2 → callback → mail) |
 
 ### AI
 

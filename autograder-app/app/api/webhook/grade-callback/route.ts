@@ -120,6 +120,15 @@ export async function POST(req: NextRequest) {
     data: { emailTerkirim },
   });
 
+  await db.gradingTrace.create({
+    data: {
+      submissionId: submission_id,
+      step: "mail",
+      status: emailTerkirim ? "done" : "error",
+      detail: emailTerkirim ? "Email hasil penilaian terkirim" : "Email hasil penilaian gagal terkirim",
+    },
+  });
+
   return NextResponse.json({
     message: emailTerkirim ? "Hasil koreksi tersimpan & email terkirim" : "Hasil koreksi tersimpan, tapi email gagal terkirim",
     emailTerkirim,

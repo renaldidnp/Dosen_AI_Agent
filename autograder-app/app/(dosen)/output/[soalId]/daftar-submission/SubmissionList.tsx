@@ -1,7 +1,59 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink, FolderOpenDot, X } from "lucide-react";
+import {
+  ExternalLink,
+  FolderOpenDot,
+  X,
+  FileDown,
+  BrainCircuit,
+  ShieldCheck,
+  Send,
+  Mail,
+  AlertTriangle,
+} from "lucide-react";
+
+type TraceRow = {
+    id: string;
+    step: string;
+    status: string;
+    detail: string | null;
+    provider: string | null;
+    model: string | null;
+    durationMs: number | null;
+    createdAt: Date | string;
+};
+
+const TRACE_STEP: Record<string, { label: string; icon: typeof FileDown }> = {
+    download: { label: "Unduh Jawaban", icon: FileDown },
+    pass1: { label: "Pass 1 · Agent Penilai", icon: BrainCircuit },
+    pass2: { label: "Pass 2 · Agent Peninjau", icon: ShieldCheck },
+    callback: { label: "Callback Hasil", icon: Send },
+    mail: { label: "Email Hasil", icon: Mail },
+    error: { label: "Error", icon: AlertTriangle },
+};
+
+function traceStatusColor(status: string): string {
+    if (status === "running") return "bg-[var(--accent)] animate-pulse";
+    if (status === "error") return "bg-[var(--danger-text)]";
+    return "bg-[var(--success)]";
+}
+
+function traceStatusLabel(status: string): string {
+    if (status === "running") return "Berjalan";
+    if (status === "error") return "Gagal";
+    return "Selesai";
+}
+
+function traceTime(value: Date | string): string {
+    return new Date(value).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+function traceDurasi(ms: number | null): string {
+    if (!ms || ms < 0) return "";
+    if (ms < 1000) return `${ms}ms`;
+    return `${(ms / 1000).toFixed(1)}s`;
+}
 
 type IndikatorReview = {
     keputusan: "setuju" | "koreksi";
@@ -69,9 +121,16 @@ function drivePreviewUrl(driveFileId: string) {
     return `https://drive.google.com/file/d/${driveFileId}/preview`;
 }
 
-export default function SubmissionList({ submissions }: { submissions: SubmissionRow[] }) {
+export default function SubmissionList({
+  submissions,
+  tracesBySubmission,
+}: {
+  submissions: SubmissionRow[];
+  tracesBySubmission?: Record<string, TraceRow[]>;
+}) {
     const [activeId, setActiveId] = useState<string | null>(null);
     const active = submissions.find((s) => s.id === activeId) ?? null;
+    const activeTraces = (activeId && tracesBySubmission?.[activeId]) || [];
 
     // Tutup modal dengan tombol Escape
     useEffect(() => {
@@ -268,6 +327,63 @@ export default function SubmissionList({ submissions }: { submissions: Submissio
                                         ) : null
                                     )}
                                 </ul>
+                            </div>
+                        )}
+
+                        {/* Langkah AI Agent (live trace) */}
+                        {activeTraces.length > 0 && (
+                            <div className="px-5 py-4 border-b border-[var(--border-soft)] bg-[var(--bg)] max-h-[280px] overflow-y-auto">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <BrainCircuit className="w-4 h-4 text-[var(--accent)]" />
+                                    <h4 className="font-heading text-xs font-bold text-[var(--text)]">
+                                        Langkah AI Agent
+                                    </h4>
+                                    <span className="text-[10px] text-[var(--text-muted)] ml-auto">
+                                        {activeTraces.length} langkah
+                                    </span>
+                                </div>
+
+                                <ol className="relative border-l border-[var(--border-strong)] ml-1 space-y-3">
+                                    {activeTraces.map((t) => {
+                                        const meta = TRACE_STEP[t.step] ?? TRACE_STEP.error;
+                                        const Icon = meta.icon;
+                                        const durasi = traceDurasi(t.durationMs);
+                                        return (
+                                            <li key={t.id} className="ml-4 pl-3">
+                                                <span
+                                                    className={`absolute -left-[7px] mt-1 w-3 h-3 rounded-full ring-4 ring-[var(--bg-panel)] ${traceStatusColor(t.status)}`}
+                                                />
+                                                <div className="flex items-center gap-2">
+                                                    <Icon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                                                    <span className="text-xs font-bold text-[var(--text)]">
+                                                        {meta.label}
+                                                    </span>
+                                                    <span className="text-[10px] text-[var(--text-faint)] ml-auto">
+                                                        {traceTime(t.createdAt)}
+                                                    </span>
+                                                    {durasi && (
+                                                        <span className="text-[10px] font-bold text-[var(--accent-ink)]">
+                                                            {durasi}
+                                                        </span>
+                                                    )}
+                                                    <span className="text-[10px] font-bold text-[var(--text-muted)]">
+                                                        {traceStatusLabel(t.status)}
+                                                    </span>
+                                                </div>
+                                                {t.detail && (
+                                                    <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
+                                                        {t.detail}
+                                                    </p>
+                                                )}
+                                                {(t.provider || t.model) && (
+                                                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5 font-mono">
+                                                        {t.provider}/{t.model}
+                                                    </p>
+                                                )}
+                                            </li>
+                                        );
+                                    })}
+                                </ol>
                             </div>
                         )}
 

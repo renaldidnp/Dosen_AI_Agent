@@ -1,5 +1,15 @@
 import { GradingResult, GradingErrorResult } from "../types";
 
+function traceUrl(): string {
+  const cb = process.env.CALLBACK_URL ?? "";
+  const custom = process.env.TRACE_URL?.trim();
+  if (custom) return custom;
+  // CALLBACK_URL biasanya ".../api/webhook/grade-callback" → ubah segmen terakhir
+  // menjadi "/trace". Ganti cukup /grade-callback — kalau diganti dengan
+  // "/api/webhook/trace", folder /api/webhook-nya ikut duplikat.
+  return cb.replace(/\/grade-callback$/i, "/trace");
+}
+
 async function postCallback(payload: Record<string, unknown>): Promise<void> {
   const callbackUrl = process.env.CALLBACK_URL;
   const secret = process.env.AGENT_CALLBACK_SECRET;
@@ -45,4 +55,52 @@ export async function sendGradingErrorCallback(result: GradingErrorResult): Prom
     status: "error",
     error_message: result.errorMessage,
   });
+}
+
+// ──────────────────────────────────────────────────────────
+// LIVE TRACE: laporkan progres langkah grading ke Next.js
+// (fire-and-forget — kegagalan melapor tidak menggagalkan grading).
+// ──────────────────────────────────────────────────────────
+
+export type TraceStep = "download" | "pass1" | "pass2" | "callback" | "mail" | "error";
+
+export async function reportTrace(params: {
+  submissionId: string;
+  step: TraceStep;
+  status: "running" | "done" | "error";
+  detail?: string;
+  provider?: string;
+  model?: string;
+  durationMs?: number;
+}): Promise<void> {
+  const secret = process.env.AGENT_CALLBACK_SECRET;
+  if (!secret) {
+    console.warn("[trace] AGENT_CALLBACK_SECRET belum diset, trace dilewati.");
+    return;
+  }
+
+  try {
+    const res = await fetch(traceUrl(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-agent-callback-secret": secret,
+      },
+      body: JSON.stringify({
+        submission_id: params.submissionId,
+        step: params.step,
+        status: params.status,
+        detail: params.detail ?? null,
+        provider: params.provider ?? null,
+        model: params.model ?? null,
+        duration_ms: params.durationMs ?? null,
+      }),
+    });
+
+    if (!res.ok) {
+      console.warn(`[trace] Lapor trace ditolak: ${res.status}`);
+    }
+  } catch (err) {
+    console.warn("[trace] Gagal melapor trace:", err instanceof Error ? err.message : err);
+  }
 }

@@ -24,14 +24,25 @@ export default async function DaftarSubmissionPage({
 }: {
   params: { soalId: string };
 }) {
-  const [soal, submissions] = await Promise.all([
+  const [soal, submissions, traces] = await Promise.all([
     db.soal.findUnique({ where: { id: params.soalId } }),
     db.submission.findMany({
       where: { soalId: params.soalId },
       include: { hasilKoreksi: true },
       orderBy: { createdAt: "desc" },
     }),
+    db.gradingTrace.findMany({
+      where: { submission: { soalId: params.soalId } },
+      orderBy: { createdAt: "asc" },
+      include: { submission: { select: { id: true } } },
+    }),
   ]);
+
+  const tracesBySubmission = traces.reduce<Record<string, typeof traces>>((acc, t) => {
+    acc[t.submission.id] = acc[t.submission.id] ?? [];
+    acc[t.submission.id].push(t);
+    return acc;
+  }, {});
 
   const total = submissions.length;
   const sudahDinilai = submissions.filter((s) => s.hasilKoreksi).length;
@@ -143,6 +154,7 @@ export default async function DaftarSubmissionPage({
                   }
                 : null,
             }))}
+            tracesBySubmission={tracesBySubmission}
           />
         )}
       </div>

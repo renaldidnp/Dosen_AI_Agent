@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Zap, RefreshCw, Loader2, UploadCloud, Sparkles, AlertTriangle, CheckCheck } from "lucide-react";
+import { Zap, RefreshCw, Loader2, UploadCloud, Sparkles, AlertTriangle, CheckCheck, FileDown, BrainCircuit, ShieldCheck, Send, Mail } from "lucide-react";
 
 type LogStatus = "running" | "queued" | "done";
 
@@ -12,6 +12,8 @@ type ApiLogEntry = {
   title: string;
   detail: string;
   createdAt: string;
+  step?: string;
+  durationMs?: number | null;
 };
 
 type LogEntry = ApiLogEntry & { timeLabel: string };
@@ -36,6 +38,21 @@ const STATUS_STYLE: Record<
     icon: CheckCheck,
   },
 };
+
+const STEP_ICON: Record<string, typeof FileDown> = {
+  download: FileDown,
+  pass1: BrainCircuit,
+  pass2: ShieldCheck,
+  callback: Send,
+  mail: Mail,
+  error: AlertTriangle,
+};
+
+function formatDuration(ms?: number | null): string {
+  if (!ms || ms < 0) return "";
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(1)}s`;
+}
 
 const POLL_INTERVAL_MS = 6000;
 const MAX_ENTRIES = 10;
@@ -150,7 +167,8 @@ export default function RealTimeLog({
         ) : (
           entries.map((entry) => {
             const style = STATUS_STYLE[entry.status];
-            const StatusIcon = style.icon;
+            const StatusIcon = (entry.step && STEP_ICON[entry.step]) || style.icon;
+            const durasi = formatDuration(entry.durationMs);
 
             return (
               <div
@@ -194,6 +212,12 @@ export default function RealTimeLog({
 
                   <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-faint)] mt-1">
                     <span>{entry.timeLabel}</span>
+                    {durasi && (
+                      <span className="inline-flex items-center gap-1 text-[var(--accent-ink)] font-semibold">
+                        <span>&middot;</span>
+                        {durasi}
+                      </span>
+                    )}
                   </div>
 
                   {entry.status === "running" && (

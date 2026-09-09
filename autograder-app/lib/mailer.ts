@@ -18,7 +18,7 @@ export async function sendHasilPenilaianEmail(params: {
   const resend = new Resend(apiKey);
   const { to, namaMahasiswa, judulSoal, skorTotal, feedback, link } = params;
 
-  const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Autograder <onboarding@resend.dev>";
+  const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "SwaKoreksiIn <onboarding@resend.dev>";
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,
@@ -50,7 +50,7 @@ export async function sendNotifikasiSoalBaruEmail(params: { to: string; namaMaha
   const resend = new Resend(apiKey);
   const { to, namaMahasiswa, judulSoal, mataKuliah, deskripsi, submitLink, pdfUrl } = params;
 
-  const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Autograder <onboarding@resend.dev>";
+  const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "SwaKoreksiIn <onboarding@resend.dev>";
 
   const { error } = await resend.emails.send({
     from: FROM_EMAIL,

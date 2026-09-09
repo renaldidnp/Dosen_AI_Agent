@@ -126,7 +126,7 @@ export default function LandingPage() {
         </h1>
 
         <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-[var(--text-muted)]">
-          Nexus mengoreksi jawaban mahasiswa otomatis berdasarkan rubrik yang
+          SwaKoreksiIn mengoreksi jawaban mahasiswa otomatis berdasarkan rubrik yang
           Anda tentukan sendiri &mdash; lengkap dengan skor per indikator dan
           feedback yang langsung terkirim ke email mahasiswa.
         </p>
@@ -299,7 +299,7 @@ export default function LandingPage() {
               },
               {
                 icon: Mail,
-                title: "Nexus koreksi & kirim hasil",
+                title: "SwaKoreksiIn koreksi & kirim hasil",
                 desc: "Skor per indikator dan feedback terkirim ke email mahasiswa.",
               },
             ].map((step, i) => (
@@ -382,7 +382,7 @@ export default function LandingPage() {
             className="text-2xl md:text-3xl text-[var(--text)] mb-4"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Semester ini, biarkan Nexus yang mengoreksi.
+            Semester ini, biarkan SwaKoreksiIn yang mengoreksi.
           </h2>
           <p className="text-[var(--text-muted)] text-[14px] mb-8">
             Masuk dengan akun dosen Anda dan mulai buat soal pertama.

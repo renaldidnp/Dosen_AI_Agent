@@ -206,7 +206,7 @@ export default function SubmitSoalPage() {
               {soal.judul}
             </h1>
             <p className="mt-1.5 text-sm text-[var(--text-muted)]">
-              {soal.kelas ? `${soal.kelas.nama} · Angkatan ${soal.kelas.angkatan}` : "Autograder"}{" "}
+              {soal.kelas ? `${soal.kelas.nama} · Angkatan ${soal.kelas.angkatan}` : "SwaKoreksiIn"}{" "}
               — {soal.dosen?.nama ? `oleh ${soal.dosen.nama}` : ""}
             </p>
           </div>
@@ -384,7 +384,7 @@ function PublicShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2 text-[var(--accent-ink)]">
             <Sparkles className="h-5 w-5" />
             <span className="font-heading text-sm font-bold">
-              Autograder<span className="text-[var(--text-faint)]"> · Ujian Digital</span>
+              SwaKoreksiIn<span className="text-[var(--text-faint)]"> · Ujian Digital</span>
             </span>
           </div>
           <h2 className="mt-2 flex items-center gap-2 text-sm text-[var(--text-muted)]">

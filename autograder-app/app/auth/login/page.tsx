@@ -95,7 +95,7 @@ export default function LoginPage() {
                 className="w-1.5 h-1.5 bg-[var(--accent)] rounded-[2px]"
                 style={{ boxShadow: "0 0 8px var(--accent)" }}
               />
-              Nexus Access
+              SwaKoreksiIn
             </div>
             <h1 className={`font-semibold text-[26px] sm:text-[28px] text-[var(--text)] leading-tight tracking-tight ${LANDSCAPE_Q}:text-[22px]`}>
               Masuk ke{" "}

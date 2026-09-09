@@ -112,7 +112,7 @@ export default function DashboardShell({
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="font-heading font-bold text-lg text-[var(--accent-ink)] tracking-tight leading-none truncate">
-                  Nexus Edu
+                  SwaKoreksiIn
                 </span>
                 <span className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-wider mt-1">
                   Portal Pengampu

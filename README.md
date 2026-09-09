@@ -1,6 +1,6 @@
-# Nexus.grade
+# SwaKoreksiIn
 
-Sistem autograding berbasis AI untuk dosen perguruan tinggi di Indonesia. Nexus.grade mengotomasi proses koreksi jawaban mahasiswa menggunakan Google Gemini LLM, terintegrasi dengan Google Drive dan email otomatis.
+Sistem autograding berbasis AI untuk dosen perguruan tinggi di Indonesia. SwaKoreksiIn mengotomasi proses koreksi jawaban mahasiswa menggunakan Google Gemini LLM, terintegrasi dengan Google Drive dan email otomatis.
 
 ## Fitur Utama
 

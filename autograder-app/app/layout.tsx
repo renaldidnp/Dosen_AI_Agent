@@ -2,7 +2,7 @@ import "./globals.css";
 import { ThemeProvider } from "./theme-provider";
 
 export const metadata = {
-  title: "Autograder Dosen",
+  title: "SwaKoreksiIn",
   description: "Sistem koreksi otomatis terintegrasi Google Drive",
 };
 

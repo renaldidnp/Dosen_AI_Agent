@@ -129,32 +129,35 @@ export async function uploadSoalPdf(
 }
 
 /**
- * Memindahkan file jawaban mahasiswa (hasil upload dari Google Form) dari folder
- * default milik Google Forms, ke folder root/angkatan/kelas/Jawaban Mahasiswa
- * milik kelas terkait. Dipanggil dari webhook setelah submission diterima.
- *
- * Mengembalikan null (tanpa throw) kalau kelasId tidak valid, supaya pemanggil
- * bisa memilih untuk tetap menyimpan submission dengan link/fileId lama sebagai fallback.
+ * Upload file jawaban mahasiswa (dari halaman submit custom) langsung ke
+ * folder '{JAWABAN_FOLDER_NAME}' milik kelas terkait. Kalau kelas tidak
+ * ditemukan, file ditaruh di dalam folder jawaban di root soal.
  */
-export async function moveSubmissionFile(
-  fileId: string,
-  kelasId: string,
-): Promise<{ fileId: string; webViewLink: string } | null> {
-  const kelasFolderId = await getOrCreateKelasFolder(kelasId);
-  if (!kelasFolderId) return null;
-
+export async function uploadJawabanFile(
+  buffer: Buffer,
+  fileName: string,
+  kelasId: string | null,
+): Promise<{ fileId: string; webViewLink: string }> {
   const drive = getDriveClient();
-  const jawabanFolderId = await findOrCreateFolder(JAWABAN_FOLDER_NAME, kelasFolderId);
 
-  const current = await drive.files.get({ fileId, fields: "parents" });
-  const previousParents = current.data.parents?.join(",");
+  let parentFolderId: string | null = null;
+  if (kelasId) {
+    parentFolderId = await getOrCreateKelasFolder(kelasId);
+  }
+  if (!parentFolderId) {
+    parentFolderId = await getRootSoalFolder();
+  }
+  const jawabanFolderId = await findOrCreateFolder(JAWABAN_FOLDER_NAME, parentFolderId);
 
-  const updated = await drive.files.update({
-    fileId,
-    addParents: jawabanFolderId,
-    removeParents: previousParents,
+  const res = await drive.files.create({
+    requestBody: { name: fileName, parents: [jawabanFolderId], mimeType: "application/pdf" },
+    media: { mimeType: "application/pdf", body: Readable.from(buffer) },
     fields: "id, webViewLink",
   });
 
-  return { fileId: updated.data.id!, webViewLink: updated.data.webViewLink! };
+  const fileId = res.data.id!;
+  await drive.permissions.create({ fileId, requestBody: { role: "reader", type: "anyone" } });
+  const file = await drive.files.get({ fileId, fields: "webViewLink" });
+
+  return { fileId, webViewLink: file.data.webViewLink! };
 }

@@ -3,7 +3,7 @@ import { ThemeProvider } from "./theme-provider";
 
 export const metadata = {
   title: "Autograder Dosen",
-  description: "Sistem koreksi otomatis terintegrasi Google Drive & Google Form",
+  description: "Sistem koreksi otomatis terintegrasi Google Drive",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

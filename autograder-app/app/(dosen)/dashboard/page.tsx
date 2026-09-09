@@ -17,7 +17,7 @@ export default async function DashboardPage() {
     0
   );
 
-  const draftCount = soalList.filter((s) => !s.googleFormUrl?.trim()).length;
+  const draftCount = soalList.filter((s) => !s.submitToken?.trim()).length;
   const activeCount = totalSoal - draftCount;
 
   return (
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
             {activeCount}
           </span>
           <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-[var(--border-soft)] flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[10px] sm:text-xs text-[var(--text-muted)]">
-            <span>Sudah terhubung Google Form</span>
+            <span>Aktif untuk submit link</span>
           </div>
         </div>
 
@@ -120,7 +120,7 @@ export default async function DashboardPage() {
             {draftCount}
           </span>
           <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-[var(--border-soft)] flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[10px] sm:text-xs text-[var(--text-muted)]">
-            <span>Belum terhubung Google Form</span>
+            <span>Belum ada link submit</span>
           </div>
         </div>
       </section>

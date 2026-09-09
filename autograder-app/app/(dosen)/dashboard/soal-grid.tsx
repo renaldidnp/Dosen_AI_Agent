@@ -17,6 +17,9 @@ import {
   SearchX,
   ChevronLeft,
   ChevronRight,
+  Copy,
+  Check,
+  Link2,
 } from "lucide-react";
 
 const PAGE_SIZE = 6;
@@ -35,7 +38,8 @@ type Soal = {
   id: string;
   judul: string;
   deskripsi?: string | null;
-  googleFormUrl?: string | null;
+  submitToken?: string | null;
+  submitTokenExpiry?: Date | string | null;
   createdAt: Date | string;
   submission?: unknown[];
   indikator?: Indikator[];
@@ -50,6 +54,7 @@ export default function SoalGrid({
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deletingSoal, setDeletingSoal] = useState<Soal | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Search & filter
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,7 +70,6 @@ export default function SoalGrid({
 
   const [editJudul, setEditJudul] = useState("");
   const [editDeskripsi, setEditDeskripsi] = useState("");
-  const [editGoogleFormUrl, setEditGoogleFormUrl] = useState("");
   const [editIndikator, setEditIndikator] = useState<Indikator[]>([]);
 
   const menuRef = useRef<HTMLDivElement>(null);
@@ -75,7 +79,7 @@ export default function SoalGrid({
   // ============================================================
 
   function isDraft(soal: Soal) {
-    return !soal.googleFormUrl?.trim();
+    return !soal.submitToken?.trim();
   }
 
   // ============================================================
@@ -177,7 +181,6 @@ export default function SoalGrid({
 
       setEditJudul(detail.judul ?? "");
       setEditDeskripsi(detail.deskripsi ?? "");
-      setEditGoogleFormUrl(detail.googleFormUrl ?? "");
 
       setEditIndikator(
         detail.indikator?.length
@@ -210,7 +213,6 @@ export default function SoalGrid({
     setEditingId(null);
     setEditJudul("");
     setEditDeskripsi("");
-    setEditGoogleFormUrl("");
     setEditIndikator([]);
   }
 
@@ -271,7 +273,6 @@ export default function SoalGrid({
         body: JSON.stringify({
           judul: editJudul,
           deskripsi: editDeskripsi,
-          googleFormUrl: editGoogleFormUrl,
           indikator: editIndikator,
         }),
       });
@@ -300,6 +301,13 @@ export default function SoalGrid({
     } finally {
       setIsSaving(false);
     }
+  }
+
+  async function copySubmitLink(soal: Soal) {
+    const base = window.location.origin;
+    await navigator.clipboard.writeText(`${base}/submit/${soal.submitToken}`);
+    setCopiedId(soal.id);
+    setTimeout(() => setCopiedId(null), 2000);
   }
 
   async function handleConfirmDelete() {
@@ -608,6 +616,29 @@ export default function SoalGrid({
                   </div>
                 </div>
 
+                {/* LINK SUBMIT */}
+                {!isDraft(soal) && soal.submitToken && (
+                  <button
+                    onClick={() => copySubmitLink(soal)}
+                    className="mb-4 w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--bg)] border border-[var(--border-soft)] hover:border-[var(--accent-border)] transition-colors group/link"
+                  >
+                    <Link2 className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
+                    <span className="flex-1 text-left min-w-0">
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-[var(--text-faint)]">
+                        Link Submit Mahasiswa
+                      </span>
+                      <span className="block text-xs text-[var(--text-muted)] truncate group-hover/link:text-[var(--accent-ink)]">
+                        /submit/{soal.submitToken}
+                      </span>
+                    </span>
+                    {copiedId === soal.id ? (
+                      <Check className="w-4 h-4 text-[var(--success-ink)] shrink-0" />
+                    ) : (
+                      <Copy className="w-4 h-4 text-[var(--text-faint)] shrink-0" />
+                    )}
+                  </button>
+                )}
+
                 {/* RESULT BUTTON */}
                 <div className="mt-auto pt-3 border-t border-[var(--border-soft)]">
                   <Link
@@ -750,24 +781,6 @@ export default function SoalGrid({
                       value={editDeskripsi}
                       onChange={(e) => setEditDeskripsi(e.target.value)}
                       rows={3}
-                      className="
-                        w-full bg-[var(--bg)] border border-[var(--border)] rounded-xl
-                        px-3 py-2 text-sm text-[var(--text)]
-                        placeholder:text-[var(--text-faint)]
-                        focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]
-                        focus:border-[var(--accent)]
-                      "
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">
-                      Link Google Form
-                    </label>
-                    <input
-                      type="text"
-                      value={editGoogleFormUrl}
-                      onChange={(e) => setEditGoogleFormUrl(e.target.value)}
                       className="
                         w-full bg-[var(--bg)] border border-[var(--border)] rounded-xl
                         px-3 py-2 text-sm text-[var(--text)]

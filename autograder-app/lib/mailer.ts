@@ -39,7 +39,7 @@ export async function sendHasilPenilaianEmail(params: {
   }
 }
 
-export async function sendNotifikasiSoalBaruEmail(params: { to: string; namaMahasiswa: string; judulSoal: string; mataKuliah: string | null; deskripsi: string | null; googleFormUrl: string; pdfUrl?: string | null }) {
+export async function sendNotifikasiSoalBaruEmail(params: { to: string; namaMahasiswa: string; judulSoal: string; mataKuliah: string | null; deskripsi: string | null; submitLink: string; pdfUrl?: string | null }) {
   const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {
@@ -48,7 +48,7 @@ export async function sendNotifikasiSoalBaruEmail(params: { to: string; namaMaha
   }
 
   const resend = new Resend(apiKey);
-  const { to, namaMahasiswa, judulSoal, mataKuliah, deskripsi, googleFormUrl, pdfUrl } = params;
+  const { to, namaMahasiswa, judulSoal, mataKuliah, deskripsi, submitLink, pdfUrl } = params;
 
   const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Autograder <onboarding@resend.dev>";
 
@@ -77,8 +77,8 @@ export async function sendNotifikasiSoalBaruEmail(params: { to: string; namaMaha
 
       <p style="margin-bottom: 4px;"><strong>✍️ Langkah ${pdfUrl ? "2" : "1"} — Kerjakan &amp; submit jawaban</strong></p>
       <p style="margin-top: 0;">
-        Setelah selesai mengerjakan, submit jawaban kamu melalui form berikut:<br />
-        <a href="${googleFormUrl}" style="color: #4f46e5;">${googleFormUrl}</a>
+        Setelah selesai mengerjakan, submit jawaban kamu melalui link berikut:<br />
+        <a href="${submitLink}" style="color: #4f46e5;">${submitLink}</a>
       </p>
     `,
   });

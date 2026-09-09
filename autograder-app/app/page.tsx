@@ -295,7 +295,7 @@ export default function LandingPage() {
               {
                 icon: FolderSync,
                 title: "Mahasiswa submit",
-                desc: "Jawaban masuk lewat Google Form, tersimpan otomatis ke Drive.",
+                desc: "Jawaban masuk via link submit di email, tersimpan otomatis ke Drive.",
               },
               {
                 icon: Mail,
@@ -349,8 +349,8 @@ export default function LandingPage() {
               },
               {
                 icon: FolderSync,
-                title: "Terhubung Google Form & Drive",
-                desc: "Tidak perlu platform submission baru — pakai alur yang sudah familiar bagi mahasiswa.",
+                title: "Terhubung Google Drive",
+                desc: "PDF soal dan jawaban mahasiswa tersimpan rapi di Drive Anda — tanpa platform submission tambahan.",
               },
               {
                 icon: Activity,

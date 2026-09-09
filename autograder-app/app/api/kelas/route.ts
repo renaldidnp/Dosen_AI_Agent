@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { createKelasForm } from "@/lib/google-forms";
 
 async function requireAuth(req: NextRequest) {
   const token = req.cookies.get("session_token")?.value;
@@ -49,18 +48,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Gagal membuat kelas." }, { status: 500 });
   }
 
-  let formWarning: string | undefined;
-  try {
-    const { formId, formUrl } = await createKelasForm(kelas.nama, kelas.angkatan);
-
-    kelas = await db.kelas.update({
-      where: { id: kelas.id },
-      data: { googleFormId: formId, googleFormUrl: formUrl },
-    });
-  } catch (err) {
-    console.error("Gagal membuat Google Form untuk kelas:", err);
-    formWarning = "Kelas berhasil dibuat, tapi Google Form gagal dibuat otomatis. Coba generate ulang dari halaman Kelas.";
-  }
-
-  return NextResponse.json({ ...kelas, formWarning }, { status: 201 });
+  return NextResponse.json(kelas, { status: 201 });
 }

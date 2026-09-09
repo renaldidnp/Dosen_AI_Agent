@@ -19,11 +19,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await req.json();
-  const { judul, deskripsi, googleFormId, googleFormUrl, driveFolderId } = body;
+  const { judul, deskripsi, driveFolderId } = body;
 
   const soal = await db.soal.update({
     where: { id },
-    data: { judul, deskripsi, googleFormId, googleFormUrl, driveFolderId },
+    data: { judul, deskripsi, driveFolderId },
     include: { indikator: true },
   });
 

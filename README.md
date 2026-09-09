@@ -1,15 +1,14 @@
 # Nexus.grade
 
-Sistem autograding berbasis AI untuk dosen perguruan tinggi di Indonesia. Nexus.grade mengotomasi proses koreksi jawaban mahasiswa menggunakan Google Gemini LLM, terintegrasi dengan Google Forms dan Google Drive.
+Sistem autograding berbasis AI untuk dosen perguruan tinggi di Indonesia. Nexus.grade mengotomasi proses koreksi jawaban mahasiswa menggunakan Google Gemini LLM, terintegrasi dengan Google Drive dan email otomatis.
 
 ## Fitur Utama
 
 - **Dashboard Dosen** — Manajemen kelas, mahasiswa, soal, dan hasil koreksi dalam satu tempat
 - **AI Grading** — Menggunakan Google Gemini 3.6 Flash untuk menilai jawaban mahasiswa berdasarkan rubrik per indikator
-- **Integrasi Google Forms** — Otomatis membuat form submission untuk setiap kelas
 - **Integrasi Google Drive** — Penyimpanan otomatis PDF soal dan jawaban mahasiswa
-- **Email Otomatis** — Pengiriman hasil koreksi ke email mahasiswa via Resend
-- **Webhook Bridge** — Google Apps Script menghubungkan Google Forms ke backend secara real-time
+- **Link Submit Tanpa Login** — Setiap soal punya link submit unik bertoken yang bisa dibatasi masa berlakunya
+- **Email Otomatis** — Link submit dikirim ke mahasiswa dan hasil koreksi dikirim via Resend
 - **Asynchronous Pipeline** — Grading diproses secara async, hasil dikirim via callback
 - **Dark/Light Theme** — UI modern dengan dukungan tema gelap dan terang
 - **AI Chat Assistant** — Bantuan pembuatan soal dan rubrik melalui chat dengan AI
@@ -20,19 +19,16 @@ Sistem autograding berbasis AI untuk dosen perguruan tinggi di Indonesia. Nexus.
 ┌──────────────┐     ┌──────────────┐
 │    Dosen     │     │  Mahasiswa   │
 └──────┬───────┘     └──────┬───────┘
-       │ Dashboard UI       │ Submit jawaban
+       │ Dashboard UI       │ Submit via link /submit/{token}
        ▼                    ▼
 ┌──────────────┐     ┌──────────────┐
-│  Next.js App │◄────│ Google Forms │
-│   :3000      │     └──────┬───────┘
-└──┬───┬───┬───┘            │ onFormSubmit
-   │   │   │                ▼
-   │   │   │     ┌──────────────┐
-   │   │   │     │ Apps Script  │──── webhook ────┐
-   │   │   │     └──────────────┘                 │
-   │   │   │                                      │
-   │   │   └──────────────────────────────────────┘
-   │   │
+│  Next.js App │◄────│ Link Submit  │ (dikirim lewat email)
+│   :3000      │     └──────────────┘
+└──┬───┬───┬───┘
+   │   │   ▼
+   │   │  ┌──────────────┐
+   │   │  │ Google Drive  │  (upload PDF soal & jawaban)
+   │   │  └──────────────┘
    │   ▼
    │  ┌──────────────┐     ┌──────────────┐
    │  │ Agent Service│────►│Google Gemini │
@@ -64,7 +60,7 @@ Sistem autograding berbasis AI untuk dosen perguruan tinggi di Indonesia. Nexus.
 | Prisma | 5.22 | Database ORM |
 | jose | 6.2 | JWT signing/verification |
 | bcryptjs | 3.0 | Password hashing |
-| googleapis | 176 | Google Drive, Forms, OAuth2 |
+| googleapis | 176 | Google Drive, OAuth2 |
 | pdfkit | 0.20 | PDF generation |
 | resend | 6.22 | Email delivery |
 
@@ -83,8 +79,6 @@ Sistem autograding berbasis AI untuk dosen perguruan tinggi di Indonesia. Nexus.
 |---------|----------|
 | Google Gemini 3.6 Flash | AI grading & pembuatan soal |
 | Google Drive API | Penyimpanan PDF soal & jawaban |
-| Google Forms API | Form submission mahasiswa |
-| Google Apps Script | Webhook bridge (Forms → Backend) |
 | MySQL | Database utama |
 | Resend | Email delivery |
 
@@ -92,9 +86,9 @@ Sistem autograding berbasis AI untuk dosen perguruan tinggi di Indonesia. Nexus.
 
 - Node.js 18+
 - MySQL 8+
-- Google Cloud Project (Drive API, Forms API, Gemini API)
+- Google Cloud Project (Drive API, Gemini API)
 - Resend API key
-- ngrok (untuk development, agar Apps Script bisa reach localhost)
+- ngrok (untuk development, agar agent lokal bisa kirim callback ke app)
 
 ## Instalasi
 
@@ -138,7 +132,7 @@ Konfigurasi `.env`:
 
 ```env
 DATABASE_URL="mysql://root:password@localhost:3306/nexus_grade"
-WEBHOOK_SECRET=your_webhook_secret
+APP_URL=http://localhost:3000
 AGENT_CALLBACK_SECRET=your_callback_secret
 AGENT_SECRET=your_agent_secret
 AGENT_API_URL=http://localhost:4000
@@ -172,26 +166,25 @@ cd autograder-app
 npm run dev
 ```
 
-### 6. Setup Webhook (Development)
+### 6. Setup Callback (Development)
 
 ```bash
 ngrok http 3000
 ```
 
-Gunakan URL ngrok sebagai `CALLBACK_URL` di agent dan webhook URL di Apps Script.
+Gunakan URL ngrok sebagai `CALLBACK_URL` di agent agar hasil grading bisa dikirim ke app.
 
 ## Cara Kerja
 
 ### Alur Grading
 
-1. **Dosen membuat kelas** → Sistem otomatis membuat Google Form
-2. **Dosen membuat soal** → PDF soal + rubrik di-generate dan diupload ke Google Drive. Judul soal ditambahkan ke dropdown Google Form. Mahasiswa mendapat email notifikasi.
-3. **Mahasiswa submit jawaban** → Upload PDF jawaban melalui Google Form
-4. **Apps Script trigger** → `onFormSubmit` menangkap submission dan mengirim webhook ke backend
-5. **Backend memproses** → Memvalidasi, deduplikasi, menyimpan submission, lalu memanggil Agent untuk grading
-6. **Agent grading** → Mengunduh PDF dari Google Drive, mengekstrak teks, mengirim ke Google Gemini untuk scoring
-7. **Callback results** → Agent mengirim hasil grading kembali ke backend
-8. **Email results** → Backend menyimpan hasil dan mengirim email ke mahasiswa via Resend
+1. **Dosen membuat kelas** → Tambahkan daftar mahasiswa (nama, NIM, email)
+2. **Dosen membuat soal** → PDF soal + rubrik di-generate dan diupload ke Google Drive. Sistem membuat link submit unik bertoken (dengan batas waktu sesuai pilihan dosen), lalu mengirim email notifikasi berisi link tersebut ke semua mahasiswa kelas.
+3. **Mahasiswa submit jawaban** → Klik link `/submit/{token}` di email, isi nama/NIM/email, lalu upload PDF jawaban. Tanpa perlu login.
+4. **Backend memproses** → Memvalidasi token & batas waktu, mencegah duplikat NIM, menyimpan PDF ke Drive, lalu memanggil Agent untuk grading
+5. **Agent grading** → Mengunduh PDF dari Google Drive, mengekstrak teks, mengirim ke Google Gemini untuk scoring
+6. **Callback results** → Agent mengirim hasil grading kembali ke backend
+7. **Email results** → Backend menyimpan hasil dan mengirim email ke mahasiswa via Resend
 
 ### Pembuatan Soal dengan AI
 
@@ -202,11 +195,11 @@ Dosen bisa menggunakan AI Chat Assistant saat membuat soal. Cukup deskripsikan s
 | Model | Deskripsi |
 |-------|-----------|
 | `Dosen` | Akun dosen (nama, email, password) |
-| `Kelas` | Kelas (nama, angkatan, Google Form ID, Drive folder) |
+| `Kelas` | Kelas (nama, angkatan, Drive folder) |
 | `Mahasiswa` | Mahasiswa (nama, NIM, email, kelas) |
-| `Soal` | Soal/tugas (judul, deskripsi, mata kuliah, PDF URL) |
+| `Soal` | Soal/tugas (judul, deskripsi, mata kuliah, PDF URL, submit token + expiry) |
 | `Indikator` | Rubrik penilaian (nama, bobot, rubrik, skor max) |
-| `Submission` | Jawaban mahasiswa (status, file ID, form response ID) |
+| `Submission` | Jawaban mahasiswa (status, file ID, NIM) |
 | `HasilKoreasi` | Hasil koreksi (skor total, skor per indikator, feedback) |
 
 ## API Endpoints
@@ -228,7 +221,6 @@ Dosen bisa menggunakan AI Chat Assistant saat membuat soal. Cukup deskripsikan s
 | GET | `/api/kelas/[id]` | Detail kelas |
 | PATCH | `/api/kelas/[id]` | Update kelas |
 | DELETE | `/api/kelas/[id]` | Hapus kelas |
-| POST | `/api/kelas/[id]/generate-form` | Buat/regenerate Google Form |
 
 ### Soal
 
@@ -240,11 +232,18 @@ Dosen bisa menggunakan AI Chat Assistant saat membuat soal. Cukup deskripsikan s
 | PUT | `/api/soal/[id]` | Update soal |
 | DELETE | `/api/soal/[id]` | Hapus soal |
 
-### Webhook & Callback
+### Submit Mahasiswa (Public)
 
 | Method | Endpoint | Deskripsi |
 |--------|----------|-----------|
-| POST | `/api/webhook/form-submit` | Webhook dari Google Apps Script |
+| GET | `/api/submit/[token]/soal` | Info soal berdasarkan token link (untuk halaman submit) |
+| POST | `/api/submit/[token]` | Terima upload jawaban mahasiswa (multipart PDF) |
+| GET | `/submit/[token]` | Halaman submit publik untuk mahasiswa (tanpa login) |
+
+### Callback
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
 | POST | `/api/webhook/grade-callback` | Callback hasil grading dari Agent |
 
 ### AI
@@ -271,13 +270,13 @@ DosenAIAgent/
 │   │   │   ├── kelas/           # Manajemen kelas
 │   │   │   ├── soal/            # Pembuatan soal
 │   │   │   └── output/          # Daftar submission
+│   │   ├── submit/              # Halaman submit publik mahasiswa
 │   │   ├── nilai/               # Halaman hasil mahasiswa
 │   │   └── api/                 # API routes
 │   ├── prisma/                  # Database schema
 │   ├── lib/                     # Shared utilities
 │   │   ├── auth.ts              # JWT auth
 │   │   ├── google-drive.ts      # Google Drive operations
-│   │   ├── google-forms.ts      # Google Forms operations
 │   │   ├── mailer.ts            # Resend email
 │   │   └── generate-soal-pdf.ts # PDF generation
 │   └── components/              # Reusable components
@@ -288,10 +287,6 @@ DosenAIAgent/
 │           ├── routes/          # API endpoints
 │           ├── controllers/     # Business logic
 │           └── services/        # Gemini, Drive, Callback
-│
-└── google-form-integration/     # Google Apps Script templates
-    ├── setup-guide.md
-    └── apps-script/
 ```
 
 ## Kontribusi

@@ -3,8 +3,8 @@ import { verifyToken } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateSoalPdf } from "@/lib/generate-soal-pdf";
 import { uploadSoalPdf } from "@/lib/google-drive";
-import { addSoalToFormDropdown } from "@/lib/google-forms";
 import { sendNotifikasiSoalBaruEmail } from "@/lib/mailer";
+import crypto from "crypto";
 
 export async function GET() {
   const soal = await db.soal.findMany({
@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
     mataKuliah,
     googleFormId, // sudah tidak dipakai lagi (deprecated, lihat catatan di schema), dibiarkan diterima tapi diabaikan
     driveFolderId,
+    masaBerlakuJam, // opsional: durasi link submit aktif dalam jam (default 24)
     indikator,
   } = body;
 
@@ -74,18 +75,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Total bobot semua indikator harus 100%. Saat ini: ${totalBobot}%.` }, { status: 400 });
   }
 
-  // 3. Pastikan kelas ada, sekaligus ambil googleFormId/googleFormUrl-nya
+  if (masaBerlakuJam !== undefined && (typeof masaBerlakuJam !== "number" || !(masaBerlakuJam > 0))) {
+    return NextResponse.json({ error: "masaBerlakuJam harus berupa angka lebih dari 0." }, { status: 400 });
+  }
+
+  // 3. Pastikan kelas ada (perlu untuk validasi & upload PDF ke folder kelas)
   const kelas = await db.kelas.findUnique({ where: { id: kelasId } });
   if (!kelas) {
     return NextResponse.json({ error: "Kelas tidak ditemukan." }, { status: 400 });
   }
 
-  // 4. Auto-prefix judul dengan [mataKuliah], supaya dropdown form kelas
-  // (yang tercampur lintas matkul) tetap mudah dibedakan mahasiswa.
+  // 4. Auto-prefix judul dengan [mataKuliah], supaya link submit per soal (yang
+  // tercampur lintas matkul) tetap mudah dibedakan mahasiswa.
   const mataKuliahTrimmed = mataKuliah.trim();
   const judulFinal = `[${mataKuliahTrimmed}] ${judul.trim()}`;
 
-  // 5. Simpan Soal
+  // 5. Generate token submit unik + batas waktu aktif (default 24 jam).
+  const submitToken = crypto.randomBytes(24).toString("base64url");
+  const submitTokenExpiry = new Date(Date.now() + (masaBerlakuJam ?? 24) * 60 * 60 * 1000);
   let soal;
   try {
     soal = await db.soal.create({
@@ -96,6 +103,8 @@ export async function POST(req: NextRequest) {
         kelasId,
         mataKuliah: mataKuliahTrimmed,
         driveFolderId,
+        submitToken,
+        submitTokenExpiry,
         indikator: { create: indikator },
       },
       include: { indikator: true },
@@ -131,53 +140,39 @@ export async function POST(req: NextRequest) {
     pdfResult = { pdfUrl: null, pdfWarning: "PDF gagal dibuat, coba generate ulang." };
   }
 
-  // 7. Tambahkan soal ini ke dropdown Google Form milik kelas (non-blocking).
-  let formDropdownWarning: string | undefined;
-  if (!kelas.googleFormId) {
-    formDropdownWarning = "Kelas ini belum punya Google Form (mungkin gagal saat kelas dibuat). Soal tidak otomatis masuk dropdown.";
-  } else {
-    try {
-      await addSoalToFormDropdown(kelas.googleFormId, soal.judul);
-    } catch (err) {
-      console.error("Gagal menambahkan soal ke dropdown form:", err);
-      formDropdownWarning = "Soal tersimpan, tapi gagal ditambahkan otomatis ke dropdown Google Form. Tambahkan manual.";
-    }
-  }
+  // 7. Buat link submit publik untuk mahasiswa (dipakai di email & dashboard).
+  const submitLink = `${process.env.APP_URL || req.nextUrl.origin}/submit/${submitToken}`;
 
-  // 8. Kirim Notifikasi Email ke Mahasiswa — googleFormUrl sekarang dari Kelas, bukan Soal.
+  // 8. Kirim Notifikasi Email ke Mahasiswa — link submit dikirim via mailer.
   let notifikasiInfo: { terkirim: number; gagal: number; dilewati?: string } = { terkirim: 0, gagal: 0 };
 
-  if (!kelas.googleFormUrl) {
-    notifikasiInfo.dilewati = "Kelas belum punya Google Form, notifikasi tidak dikirim.";
+  const mahasiswaKelas = soal.kelasId ? await db.mahasiswa.findMany({ where: { kelasId: soal.kelasId } }) : [];
+
+  if (mahasiswaKelas.length === 0) {
+    notifikasiInfo.dilewati = "Tidak ada mahasiswa terdaftar di kelas ini.";
   } else {
-    const mahasiswaKelas = await db.mahasiswa.findMany({ where: { kelasId: soal.kelasId! } });
+    const results = await Promise.allSettled(
+      mahasiswaKelas.map((mhs) =>
+        sendNotifikasiSoalBaruEmail({
+          to: mhs.email,
+          namaMahasiswa: mhs.nama,
+          judulSoal: soal.judul,
+          mataKuliah: soal.mataKuliah,
+          deskripsi: soal.deskripsi,
+          submitLink,
+          pdfUrl: pdfResult.pdfUrl,
+        }),
+      ),
+    );
 
-    if (mahasiswaKelas.length === 0) {
-      notifikasiInfo.dilewati = "Tidak ada mahasiswa terdaftar di kelas ini.";
-    } else {
-      const results = await Promise.allSettled(
-        mahasiswaKelas.map((mhs) =>
-          sendNotifikasiSoalBaruEmail({
-            to: mhs.email,
-            namaMahasiswa: mhs.nama,
-            judulSoal: soal.judul,
-            mataKuliah: soal.mataKuliah,
-            deskripsi: soal.deskripsi,
-            googleFormUrl: kelas.googleFormUrl!,
-            pdfUrl: pdfResult.pdfUrl,
-          }),
-        ),
-      );
-
-      results.forEach((r, i) => {
-        if (r.status === "fulfilled") {
-          notifikasiInfo.terkirim++;
-        } else {
-          console.error(`Gagal kirim notifikasi soal baru ke ${mahasiswaKelas[i].email}:`, r.reason);
-          notifikasiInfo.gagal++;
-        }
-      });
-    }
+    results.forEach((r, i) => {
+      if (r.status === "fulfilled") {
+        notifikasiInfo.terkirim++;
+      } else {
+        console.error(`Gagal kirim notifikasi soal baru ke ${mahasiswaKelas[i].email}:`, r.reason);
+        notifikasiInfo.gagal++;
+      }
+    });
   }
 
   const updated = await db.soal.findUnique({
@@ -186,7 +181,7 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(
-    { ...updated, ...pdfResult, formDropdownWarning, notifikasi: notifikasiInfo },
+    { ...updated, ...pdfResult, submitLink, notifikasi: notifikasiInfo },
     { status: 201 },
   );
 }

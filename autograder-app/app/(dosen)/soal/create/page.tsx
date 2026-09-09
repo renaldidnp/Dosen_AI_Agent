@@ -24,6 +24,7 @@ export default function CreateSoalPage() {
   const [loadingKelas, setLoadingKelas] = useState(true);
   const [kelasId, setKelasId] = useState("");
   const [mataKuliah, setMataKuliah] = useState("");
+  const [masaBerlakuJam, setMasaBerlakuJam] = useState(24);
 
   const [isDraftApplied, setIsDraftApplied] = useState(false);
 
@@ -79,6 +80,7 @@ async function handleSubmit() {
         deskripsi,
         kelasId: kelasId || null,
         mataKuliah: mataKuliah.trim() || null,
+        masaBerlakuJam,
         indikator,
       }),
     });
@@ -269,6 +271,24 @@ async function handleSubmit() {
                     value={judul}
                     onChange={(e) => setJudul(e.target.value)}
                   />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold text-[var(--text-muted)]">
+                    Masa berlaku link submit
+                  </label>
+                  <select
+                    className={inputClass}
+                    value={masaBerlakuJam}
+                    onChange={(e) => setMasaBerlakuJam(Number(e.target.value))}
+                  >
+                    <option value={6} className="bg-[var(--bg-panel)]">6 jam</option>
+                    <option value={24} className="bg-[var(--bg-panel)]">1 hari (24 jam)</option>
+                    <option value={72} className="bg-[var(--bg-panel)]">3 hari</option>
+                    <option value={168} className="bg-[var(--bg-panel)]">7 hari</option>
+                  </select>
+                  <p className="mt-1 text-xs text-[var(--text-faint)]">
+                    Batas waktu mahasiswa mengumpulkan jawaban lewat link email.
+                  </p>
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-bold text-[var(--text-muted)]">

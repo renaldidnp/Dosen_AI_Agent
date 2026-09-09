@@ -112,7 +112,7 @@ export default async function DaftarSubmissionPage({
             </h3>
             <p className="text-[var(--text-muted)] max-w-sm text-sm">
               Jawaban mahasiswa untuk soal ini akan muncul di sini begitu mereka
-              mengumpulkan lewat Google Form.
+              mengumpulkan lewat link submit di email.
             </p>
           </div>
         ) : (

@@ -2,15 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AlertTriangle, ArrowLeft, Loader2, Plus, Trash2, User, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Loader2, Plus, Trash2, User } from "lucide-react";
 
 type Mahasiswa = { id: string; nama: string; nim: string; email: string };
 type Kelas = {
   id: string;
   nama: string;
   angkatan: string;
-  googleFormId: string | null;
-  googleFormUrl: string | null;
 };
 
 export default function DetailKelasPage() {
@@ -29,14 +27,6 @@ export default function DetailKelasPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [generatingForm, setGeneratingForm] = useState(false);
-  const [formActionError, setFormActionError] = useState<string | null>(null);
-
-  const [scriptModalOpen, setScriptModalOpen] = useState(false);
-  const [scriptText, setScriptText] = useState("");
-  const [loadingScript, setLoadingScript] = useState(false);
-  const [scriptError, setScriptError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   async function loadData() {
     setLoading(true);
@@ -93,71 +83,6 @@ export default function DetailKelasPage() {
       await loadData();
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function handleShowScript() {
-    setScriptError(null);
-    setLoadingScript(true);
-    setScriptModalOpen(true);
-    try {
-      const res = await fetch(`/api/kelas/${id}/apps-script`);
-      const data = await res.json();
-      if (!res.ok) {
-        setScriptError(data.error ?? "Gagal memuat template script.");
-        return;
-      }
-      setScriptText(data.script);
-    } catch {
-      setScriptError("Gagal terhubung ke server.");
-    } finally {
-      setLoadingScript(false);
-    }
-  }
-
-  async function handleCopyScript() {
-    await navigator.clipboard.writeText(scriptText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  function closeScriptModal() {
-    setScriptModalOpen(false);
-    setScriptText("");
-    setScriptError(null);
-    setCopied(false);
-  }
-
-  async function handleGenerateForm(force = false) {
-    setFormActionError(null);
-    setGeneratingForm(true);
-    try {
-      const res = await fetch(`/api/kelas/${id}/generate-form`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ force }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (res.status === 409 && !force) {
-          const confirmForce = confirm(
-            `${data.error}\n\nBuat form baru sekarang? Form lama tidak akan bisa dipakai lagi.`
-          );
-          if (confirmForce) {
-            await handleGenerateForm(true);
-          }
-          return;
-        }
-        setFormActionError(data.error ?? "Gagal membuat Google Form.");
-        return;
-      }
-
-      await loadData();
-    } catch {
-      setFormActionError("Gagal terhubung ke server.");
-    } finally {
-      setGeneratingForm(false);
     }
   }
 
@@ -225,65 +150,6 @@ export default function DetailKelasPage() {
             </p>
           </div>
         </div>
-      )}
-
-      {/* Status Google Form Kelas */}
-      {kelas && (
-        <section className="mb-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-panel)] p-4 sm:p-6 shadow-xs">
-          <h2 className="mb-3 font-heading text-sm font-bold text-[var(--text)]">
-            Google Form Kelas
-          </h2>
-
-          {kelas.googleFormUrl ? (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <a
-                href={kelas.googleFormUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-medium text-[var(--accent-ink)] underline underline-offset-2 hover:text-[var(--accent)] break-all"
-              >
-                {kelas.googleFormUrl}
-              </a>
-              <div className="flex shrink-0 gap-2">
-                <button
-                  onClick={handleShowScript}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--accent-border)] bg-[var(--accent-soft)] px-3 py-2 text-xs font-semibold text-[var(--accent-ink)] transition-all hover:bg-[var(--accent)] hover:text-[var(--accent-fg)]"
-                >
-                  Lihat Template Apps Script
-                </button>
-                <button
-                  onClick={() => handleGenerateForm(false)}
-                  disabled={generatingForm}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--text-muted)] transition-all hover:border-[var(--accent-border)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-ink)] disabled:opacity-50"
-                >
-                  {generatingForm && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                  Generate Ulang
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-start gap-3 rounded-xl border border-[var(--danger-border)] bg-[var(--danger-soft)] p-3">
-              <AlertTriangle className="h-4 w-4 text-[var(--danger-text)] shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-[var(--danger-text)]">
-                  Kelas ini belum punya Google Form.
-                </p>
-                <button
-                  onClick={() => handleGenerateForm(false)}
-                  disabled={generatingForm}
-                  className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-[var(--accent)] px-3 py-2 text-xs font-bold text-[var(--accent-fg)] transition-all hover:bg-[var(--accent-hover)] disabled:opacity-50"
-                >
-                  {generatingForm && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                  Buat Google Form
-                </button>
-              </div>
-            </div>
-          )}
-
-          {formActionError && (
-            <p className="mt-2 text-sm text-[var(--danger-text)]">{formActionError}</p>
-          )}
-        </section>
       )}
 
       {/* Tambah mahasiswa */}
@@ -373,55 +239,6 @@ export default function DetailKelasPage() {
           </ul>
         )}
       </section>
-
-      {/* Modal Template Apps Script */}
-      {scriptModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--bg-panel)] border border-[var(--border-soft)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-[var(--border-soft)] shrink-0">
-              <h3 className="font-heading text-base font-bold text-[var(--text)]">
-                Template Apps Script — Trigger Otomatis
-              </h3>
-              <button
-                onClick={closeScriptModal}
-                className="text-[var(--text-faint)] hover:text-[var(--text)] p-1.5 rounded-lg hover:bg-[var(--accent-soft)] transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="px-6 py-4 overflow-y-auto flex-1">
-              <p className="text-xs text-[var(--text-muted)] mb-3">
-                Paste script ini ke Apps Script pada form kelas ini (lihat instruksi di
-                komentar bagian atas script), lalu jalankan fungsi <code>setup</code> sekali.
-              </p>
-
-              {loadingScript ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" />
-                </div>
-              ) : scriptError ? (
-                <p className="text-sm text-[var(--danger-text)]">{scriptError}</p>
-              ) : (
-                <pre className="text-[11px] leading-relaxed bg-[var(--bg)] border border-[var(--border)] rounded-xl p-4 overflow-x-auto whitespace-pre-wrap break-words">
-                  {scriptText}
-                </pre>
-              )}
-            </div>
-
-            {!loadingScript && !scriptError && (
-              <div className="flex justify-end gap-2 px-6 py-4 border-t border-[var(--border-soft)] shrink-0">
-                <button
-                  onClick={handleCopyScript}
-                  className="px-5 py-2.5 text-xs font-bold text-[var(--accent-fg)] bg-[var(--accent)] hover:bg-[var(--accent-hover)] rounded-xl transition-colors shadow-xs"
-                >
-                  {copied ? "Tersalin!" : "Copy Script"}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

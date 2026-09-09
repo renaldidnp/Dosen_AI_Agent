@@ -29,6 +29,7 @@ dist/
 build/
 .next/
 out/
+*.tsbuildinfo
 
 # ==========================================
 # IDE / Editor
@@ -52,9 +53,6 @@ Thumbs.db
 # ==========================================
 credentials.json
 service-account.json
-
-# Google Apps Script
-google-form-integration/apps-script/config.gs
 
 # ==========================================
 # Archify (Architecture Diagrams)

@@ -51,14 +51,16 @@ model Soal {
   kelasId        String?
   kelas          Kelas?   @relation(fields: [kelasId], references: [id])
   mataKuliah     String?
-  googleFormId   String?  // ← deprecated, dibiarkan untuk kompatibilitas data lama, tidak dipakai lagi
-  googleFormUrl  String?  // ← deprecated, dibiarkan untuk kompatibilitas data lama, tidak dipakai lagi
-  driveFolderId  String?
-  pdfUrl         String?
-  pdfDriveFileId String?
-  indikator      Indikator[]
-  submission     Submission[]
-  createdAt      DateTime @default(now())
+  googleFormId     String?   // ← deprecated, dibiarkan untuk kompatibilitas data lama, tidak dipakai lagi
+  googleFormUrl    String?   // ← deprecated, dibiarkan untuk kompatibilitas data lama, tidak dipakai lagi
+  submitToken      String?   @unique // token unik pada link submit mahasiswa: /submit/{submitToken}
+  submitTokenExpiry DateTime? // batas waktu link submit aktif; null = aktif tanpa batas
+  driveFolderId    String?
+  pdfUrl           String?
+  pdfDriveFileId   String?
+  indikator        Indikator[]
+  submission       Submission[]
+  createdAt        DateTime @default(now())
 
   @@unique([judul, kelasId])
 }
@@ -101,7 +103,7 @@ model HasilKoreksi {
 
   skorTotal       Float
   skorPerIndikator Json    // [{ indikatorId, nama, skor, catatan }]
-  feedback        String
+  feedback        String   @db.Text
 
   emailTerkirim   Boolean  @default(false)
   createdAt       DateTime @default(now())

@@ -429,9 +429,9 @@ export default function SettingsPage() {
                 detail="Terhubung"
               />
               <InfoCard
-                label="Google Forms"
+                label="Link Submit"
                 status={true}
-                detail="Terhubung"
+                detail="Token unik per soal"
               />
               <InfoCard
                 label="Google Gemini"

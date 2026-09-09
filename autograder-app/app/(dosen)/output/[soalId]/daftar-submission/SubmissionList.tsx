@@ -231,14 +231,14 @@ export default function SubmissionList({
               rounded-2xl
               shadow-2xl
               w-full max-w-3xl
-              max-h-[90vh]
+              max-h-[92vh]
               flex flex-col
               overflow-hidden
             "
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Modal header */}
-                        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-[var(--border-soft)]">
+                        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-[var(--border-soft)] shrink-0">
                             <div className="min-w-0">
                                 <h3 className="font-heading text-sm font-bold text-[var(--text)] truncate">
                                     {active.namaMahasiswa}
@@ -277,7 +277,7 @@ export default function SubmissionList({
 
                         {/* Skor & feedback */}
                         {active.hasilKoreksi && (
-                            <div className="px-5 py-3 border-b border-[var(--border-soft)] flex items-center gap-4 bg-[var(--bg)]">
+                            <div className="px-5 py-3 border-b border-[var(--border-soft)] flex items-center gap-4 bg-[var(--bg)] shrink-0">
                                 <div className="shrink-0">
                                     <span className="text-[10px] font-bold text-[var(--text-faint)] uppercase tracking-wider">
                                         Skor Total
@@ -287,13 +287,15 @@ export default function SubmissionList({
                                     </div>
                                 </div>
                                 {active.hasilKoreksi.feedback && (
-                                    <p className="text-xs text-[var(--text-muted)] leading-relaxed line-clamp-2">
+                                    <p className="min-w-0 flex-1 text-xs text-[var(--text-muted)] leading-relaxed line-clamp-3">
                                         {active.hasilKoreksi.feedback}
                                     </p>
                                 )}
                             </div>
                         )}
 
+                        {/* Area scrollable: review + trace */}
+                        <div className="flex-1 min-h-0 overflow-y-auto">
                         {active.hasilKoreksi?.direviewOleh && (
                             <div className="px-5 py-3 border-b border-[var(--border-soft)] bg-[var(--accent-soft)]">
                                 <p className="text-[10px] font-bold text-[var(--accent-ink)] uppercase tracking-wider mb-1.5">
@@ -318,7 +320,7 @@ export default function SubmissionList({
                                                         <span className="text-[var(--success-ink)]">&#10003; {ind.review.skorAkhir}</span>
                                                     )}
                                                 </span>
-                                                <span className="text-[var(--text-muted)]">
+                                                <span className="flex-1 min-w-0 text-[var(--text-muted)]">
                                                     <span className="font-semibold text-[var(--text)]">{ind.nama}</span>
                                                     {" — "}
                                                     {ind.review.alasan}
@@ -332,7 +334,7 @@ export default function SubmissionList({
 
                         {/* Langkah AI Agent (live trace) */}
                         {activeTraces.length > 0 && (
-                            <div className="px-5 py-4 border-b border-[var(--border-soft)] bg-[var(--bg)] max-h-[280px] overflow-y-auto">
+                            <div className="px-5 py-4 border-b border-[var(--border-soft)] bg-[var(--bg)]">
                                 <div className="flex items-center gap-2 mb-3">
                                     <BrainCircuit className="w-4 h-4 text-[var(--accent)]" />
                                     <h4 className="font-heading text-xs font-bold text-[var(--text)]">
@@ -353,8 +355,8 @@ export default function SubmissionList({
                                                 <span
                                                     className={`absolute -left-[7px] mt-1 w-3 h-3 rounded-full ring-4 ring-[var(--bg-panel)] ${traceStatusColor(t.status)}`}
                                                 />
-                                                <div className="flex items-center gap-2">
-                                                    <Icon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                                    <Icon className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" />
                                                     <span className="text-xs font-bold text-[var(--text)]">
                                                         {meta.label}
                                                     </span>
@@ -371,7 +373,7 @@ export default function SubmissionList({
                                                     </span>
                                                 </div>
                                                 {t.detail && (
-                                                    <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
+                                                    <p className="text-[11px] text-[var(--text-muted)] mt-0.5 break-words">
                                                         {t.detail}
                                                     </p>
                                                 )}
@@ -386,13 +388,14 @@ export default function SubmissionList({
                                 </ol>
                             </div>
                         )}
+                        </div>
 
                         {/* Drive preview */}
                         <iframe
                             src={drivePreviewUrl(active.driveFileId)}
                             title={`Jawaban ${active.namaMahasiswa}`}
                             allow="autoplay"
-                            className="w-full flex-1 min-h-[420px] border-0"
+                            className="w-full h-[42vh] sm:h-[46vh] shrink-0 border-0 border-t border-[var(--border-soft)] bg-white"
                         />
                     </div>
                 </div>

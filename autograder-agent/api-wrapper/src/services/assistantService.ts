@@ -3,6 +3,7 @@ import {
   RubrikIndikator,
   HasilIndikatorRaw,
   ReviewResult,
+  ReviewIndikator,
   GenerateSoalRequest,
   SoalDraftResult,
   ChatHistoryItem,
@@ -88,10 +89,12 @@ Tugasmu: untuk SETIAP indikator, verifikasi apakah skor dan feedback Agent Penil
 - "koreksi": kamu menemukan kelebihan yang tidak dinilai / kekurangan yang tidak dihukum / kesalahan skor → beri skorAkhir yang lebih adil.
 Hindari "koreksi" tanpa alasan yang kuat dan terpaku pada bukti.
 
+Selain itu, beri "saran" per indikator: 1-2 kalimat langkah KONKRET yang bisa mahasiswa lakukan agar skor indikator ini naik (mis. materi yang harus dipelajari, perbaikan kode tertentu, bagian yang kurang lengkap). Berbahasa Indonesia, ramah dan spesifik terhadap jawabannya.
+
 PENTING: Balas HANYA dengan JSON valid, tanpa teks lain, tanpa markdown code block, dengan format persis seperti ini:
 {
   "hasilIndikator": [
-    { "indikatorId": "...", "keputusan": "setuju" | "koreksi", "skorAkhir": 0, "alasan": "..." }
+    { "indikatorId": "...", "keputusan": "setuju" | "koreksi", "skorAkhir": 0, "alasan": "...", "saran": "..." }
   ],
   "catatan": "..."
 }`,
@@ -108,8 +111,17 @@ export async function reviewAnswer(
   const { text, provider, model } = await llmClient.generateJsonDetailed({ prompt, system, temperature: 0.1 });
 
   const parsed = JSON.parse(text);
+  const hasilIndikator: ReviewIndikator[] = (Array.isArray(parsed.hasilIndikator) ? parsed.hasilIndikator : []).map(
+    (item: ReviewIndikator) => ({
+      indikatorId: item.indikatorId ?? "",
+      keputusan: item.keputusan === "koreksi" ? "koreksi" : "setuju",
+      skorAkhir: item.skorAkhir,
+      alasan: item.alasan ?? "",
+      saran: typeof item.saran === "string" && item.saran.trim() ? item.saran : "",
+    })
+  );
   return {
-    hasilIndikator: parsed.hasilIndikator,
+    hasilIndikator,
     catatan: parsed.catatan ?? "",
     provider,
     model,

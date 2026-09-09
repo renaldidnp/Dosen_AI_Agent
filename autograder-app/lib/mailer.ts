@@ -65,6 +65,7 @@ export async function sendHasilPenilaianEmail(params: {
   feedback: string;
   link: string;
   direviewOleh?: string | null;
+  saranPerIndikator?: { nama: string; saran: string }[] | null;
 }) {
   const apiKey = process.env.RESEND_API_KEY;
 
@@ -74,13 +75,35 @@ export async function sendHasilPenilaianEmail(params: {
   }
 
   const resend = new Resend(apiKey);
-  const { to, namaMahasiswa, judulSoal, skorTotal, feedback, link, direviewOleh } = params;
+  const { to, namaMahasiswa, judulSoal, skorTotal, feedback, link, direviewOleh, saranPerIndikator } = params;
 
   const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "SwaKoreksiIn <onboarding@resend.dev>";
   const nama = escapeHtml(namaMahasiswa);
   const judul = escapeHtml(judulSoal);
   const catatanPeninjau = direviewOleh
     ? `<p>Hasil ini juga sudah <strong>dicek ulang oleh ${escapeHtml(direviewOleh)}</strong> agar penilaiannya semakin adil. <span style="color:#059669;">&#10003;</span></p>`
+    : "";
+
+  const saranItems = (saranPerIndikator ?? [])
+    .filter((s) => s && s.saran)
+    .map(
+      (s) => `
+      <tr>
+        <td style="padding:6px 0;color:#0f172a;font-size:13px;vertical-align:top;">
+          <span style="font-weight:700;color:#047857;">&#128161;</span>
+          <strong>${escapeHtml(s.nama)}</strong>
+        </td>
+        <td style="padding:6px 8px;color:#334155;font-size:13px;">${escapeHtml(s.saran)}</td>
+      </tr>`
+    )
+    .join("");
+
+  const blokSaran = saranItems
+    ? `
+    <div style="margin:0 0 20px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:16px 18px;">
+      <p style="margin:0 0 8px;font-weight:700;font-size:14px;color:#065f46;">&#11088; Saran Perbaikan — biar nilaimu makin tinggi</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${saranItems}</table>
+    </div>`
     : "";
 
   const body = `
@@ -97,6 +120,8 @@ export async function sendHasilPenilaianEmail(params: {
     </table>
 
     ${catatanPeninjau}
+
+    ${blokSaran}
 
     <p style="margin:0 0 4px;font-weight:700;font-size:15px;">Catatan dari AI</p>
     <p style="margin:0 0 20px;color:#334155;white-space:pre-line;">${escapeHtml(feedback)}</p>

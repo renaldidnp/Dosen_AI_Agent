@@ -38,7 +38,7 @@ async function processGrading(payload: GradeRequest): Promise<void> {
     let reviewAktif = false;
     let direviewOleh: string | null = null;
     let reviewCatatan = "";
-    let reviewPerIndikator: Record<string, { keputusan: "setuju" | "koreksi"; skorAkhir: number; alasan: string }> = {};
+    let reviewPerIndikator: Record<string, { keputusan: "setuju" | "koreksi"; skorAkhir: number; alasan: string; saran: string | null }> = {};
 
     try {
       const tPass2 = Date.now();
@@ -54,6 +54,7 @@ async function processGrading(payload: GradeRequest): Promise<void> {
           keputusan: item.keputusan === "koreksi" ? "koreksi" : "setuju",
           skorAkhir: Number.isFinite(item.skorAkhir) ? item.skorAkhir : 0,
           alasan: item.alasan ?? "",
+          saran: typeof item.saran === "string" && item.saran.trim() ? item.saran : null,
         };
       }
       console.log(`[pass2] Agent Peninjau (${review.provider}/${review.model}) selesai untuk submission ${payload.submission_id}`);
@@ -76,6 +77,7 @@ async function processGrading(payload: GradeRequest): Promise<void> {
         review: rev
           ? { keputusan: rev.keputusan, skorAwal: h.skor, skorAkhir, alasan: rev.alasan }
           : null,
+        saran: rev?.saran ?? null,
       };
     });
 

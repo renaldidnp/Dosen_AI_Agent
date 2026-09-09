@@ -6,6 +6,7 @@ interface SkorIndikator {
   nama: string;
   skor: number;
   catatan: string;
+  saran?: string | null;
 }
 
 export default async function NilaiPage({ params, searchParams }: { params: { submissionId: string }; searchParams: { token?: string } }) {
@@ -63,6 +64,12 @@ export default async function NilaiPage({ params, searchParams }: { params: { su
                 <div className="bg-indigo-500 h-2 rounded" style={{ width: `${Math.min(100, (item.skor / max) * 100)}%` }} />
               </div>
               {item.catatan && <p className="text-sm text-gray-600 mt-2">{item.catatan}</p>}
+              {item.saran && (
+                <p className="text-sm mt-3 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                  <span className="font-semibold text-emerald-700">Saran untuk naik nilai: </span>
+                  <span className="text-emerald-800">{item.saran}</span>
+                </p>
+              )}
             </div>
           );
         })}

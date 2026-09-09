@@ -68,6 +68,7 @@ type IndikatorSkor = {
     skor: number;
     catatan: string;
     review?: IndikatorReview | null;
+    saran?: string | null;
 };
 
 type HasilKoreksi = {
@@ -329,6 +330,24 @@ export default function SubmissionList({
                                         ) : null
                                     )}
                                 </ul>
+
+                                {active.hasilKoreksi.skorPerIndikator?.some((ind) => ind.saran) && (
+                                    <div className="mt-3 pt-3 border-t border-[var(--accent-border)]">
+                                        <p className="text-[10px] font-bold text-[var(--accent-ink)] uppercase tracking-wider mb-1.5">
+                                            Saran Perbaikan (untuk mahasiswa)
+                                        </p>
+                                        <ul className="space-y-1.5">
+                                            {active.hasilKoreksi.skorPerIndikator.map((ind) =>
+                                                ind.saran ? (
+                                                    <li key={`saran-${ind.indikatorId}`} className="text-xs text-[var(--text-muted)] flex items-start gap-2">
+                                                        <span className="shrink-0 font-bold text-[var(--text)]">{ind.nama}</span>
+                                                        <span className="flex-1 min-w-0">{ind.saran}</span>
+                                                    </li>
+                                                ) : null
+                                            )}
+                                        </ul>
+                                    </div>
+                                )}
                             </div>
                         )}
 

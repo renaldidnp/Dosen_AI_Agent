@@ -24,6 +24,7 @@ export type ReviewIndikator = {
   keputusan: "setuju" | "koreksi";
   skorAkhir: number;
   alasan: string;
+  saran?: string;
 };
 
 // Hasil lengkap Agent Peninjau
@@ -47,6 +48,7 @@ export type HasilIndikatorFinal = {
   skor: number;
   catatan: string;
   review?: IndikatorReviewInfo | null;
+  saran?: string | null;
 };
 
 export type GradingResult = {

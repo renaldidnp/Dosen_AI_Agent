@@ -101,6 +101,12 @@ export async function POST(req: NextRequest) {
   try {
     const link = `${process.env.APP_URL}/nilai/${submission_id}?token=${submission.accessToken}`;
 
+    const saranPerIndikator = Array.isArray(skor_per_indikator)
+      ? (skor_per_indikator as any[])
+          .filter((i) => i && typeof i.saran === "string" && i.saran.trim())
+          .map((i) => ({ nama: String(i.nama ?? "Indikator"), saran: i.saran }))
+      : [];
+
     await sendHasilPenilaianEmail({
       to: submission.emailMahasiswa,
       namaMahasiswa: submission.namaMahasiswa,
@@ -109,6 +115,7 @@ export async function POST(req: NextRequest) {
       feedback,
       link,
       direviewOleh,
+      saranPerIndikator,
     });
     emailTerkirim = true;
   } catch (err) {

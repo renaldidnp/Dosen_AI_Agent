@@ -1,11 +1,12 @@
 # SwaKoreksiIn
 
-Sistem autograding berbasis AI untuk dosen perguruan tinggi di Indonesia. SwaKoreksiIn mengotomasi proses koreksi jawaban mahasiswa menggunakan Google Gemini LLM, terintegrasi dengan Google Drive dan email otomatis.
+Sistem autograding berbasis AI untuk dosen perguruan tinggi di Indonesia. SwaKoreksiIn mengotomasi proses koreksi jawaban mahasiswa menggunakan multi-agent LLM (Gemini, OpenRouter, Groq — otomatis failover), terintegrasi dengan Google Drive dan email otomatis.
 
 ## Fitur Utama
 
 - **Dashboard Dosen** — Manajemen kelas, mahasiswa, soal, dan hasil koreksi dalam satu tempat
-- **AI Grading** — Menggunakan Google Gemini 3.6 Flash untuk menilai jawaban mahasiswa berdasarkan rubrik per indikator
+- **AI Grading** — Multi-agent: Agent **Penilai** menskor jawaban per rubrik, lalu Agent **Peninjau** memverifikasi ulang hasilnya (pergerakan skor + alasan tiap indikator)
+- **Multi-Provider LLM** — Mendukung Gemini, OpenRouter (DeepSeek), dan Groq (Llama) dengan failover otomatis berurutan; cukup atur lewat `LLM_PROVIDERS`
 - **Integrasi Google Drive** — Penyimpanan otomatis PDF soal dan jawaban mahasiswa
 - **Link Submit Tanpa Login** — Setiap soal punya link submit unik bertoken yang bisa dibatasi masa berlakunya
 - **Email Otomatis** — Link submit dikirim ke mahasiswa dan hasil koreksi dikirim via Resend
@@ -30,11 +31,11 @@ Sistem autograding berbasis AI untuk dosen perguruan tinggi di Indonesia. SwaKor
    │   │  │ Google Drive  │  (upload PDF soal & jawaban)
    │   │  └──────────────┘
    │   ▼
-   │  ┌──────────────┐     ┌──────────────┐
-   │  │ Agent Service│────►│Google Gemini │
-   │  │   :4000      │     │  AI LLM      │
-   │  └──────┬───────┘     └──────────────┘
-   │         │ Download PDF
+   │  ┌──────────────┐     ┌──────────────────────┐
+   │  │ Agent Service│────►│ LLM Multi-Provider   │
+   │  │   :4000      │     │ Gemini/OpenRouter/   │
+   │  └──────┬───────┘     │ Groq (failover)      │
+   │         │ Download PDF└──────────────────────┘
    │         ▼
    │  ┌──────────────┐
    │  │ Google Drive  │
@@ -77,7 +78,7 @@ Sistem autograding berbasis AI untuk dosen perguruan tinggi di Indonesia. SwaKor
 
 | Service | Kegunaan |
 |---------|----------|
-| Google Gemini 3.6 Flash | AI grading & pembuatan soal |
+| LLM Multi-Provider | Gemini 3.6 Flash, OpenRouter (DeepSeek), Groq (Llama 3.3) — AI grading multi-agent & pembuatan soal |
 | Google Drive API | Penyimpanan PDF soal & jawaban |
 | MySQL | Database utama |
 | Resend | Email delivery |
@@ -114,7 +115,15 @@ PORT=4000
 CALLBACK_URL=http://localhost:3000/api/webhook/grade-callback
 AGENT_CALLBACK_SECRET=your_callback_secret
 AGENT_SECRET=your_agent_secret
+# Urutan prioritas provider LLM (failover otomatis bila provider gagal):
+LLM_PROVIDERS=gemini
 GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-3.6-flash
+# Opsional — provider cadangan/peninjau:
+OPENROUTER_API_KEY=
+OPENROUTER_MODEL=deepseek/deepseek-chat
+GROQ_API_KEY=
+GROQ_MODEL=llama-3.3-70b-versatile
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 GOOGLE_REFRESH_TOKEN=your_google_refresh_token
@@ -182,13 +191,13 @@ Gunakan URL ngrok sebagai `CALLBACK_URL` di agent agar hasil grading bisa dikiri
 2. **Dosen membuat soal** → PDF soal + rubrik di-generate dan diupload ke Google Drive. Sistem membuat link submit unik bertoken (dengan batas waktu sesuai pilihan dosen), lalu mengirim email notifikasi berisi link tersebut ke semua mahasiswa kelas.
 3. **Mahasiswa submit jawaban** → Klik link `/submit/{token}` di email, isi nama/NIM/email, lalu upload PDF jawaban. Tanpa perlu login.
 4. **Backend memproses** → Memvalidasi token & batas waktu, mencegah duplikat NIM, menyimpan PDF ke Drive, lalu memanggil Agent untuk grading
-5. **Agent grading** → Mengunduh PDF dari Google Drive, mengekstrak teks, mengirim ke Google Gemini untuk scoring
+5. **Agent grading (multi-agent)** → Mengunduh PDF dari Google Drive, mengekstrak teks, lalu **Pass 1 — Agent Penilai** menskor tiap indikator. Hasilnya diverifikasi **Pass 2 — Agent Peninjau** di-cross-check dengan rubrik (keputusan "setuju"/"koreksi" per indikator + alasan). Bila peninjau gagal, hasil pass 1 tetap dipakai (ditandai `reviewAktif = false`)
 6. **Callback results** → Agent mengirim hasil grading kembali ke backend
 7. **Email results** → Backend menyimpan hasil dan mengirim email ke mahasiswa via Resend
 
 ### Pembuatan Soal dengan AI
 
-Dosen bisa menggunakan AI Chat Assistant saat membuat soal. Cukup deskripsikan soal yang diinginkan, dan Gemini akan menghasilkan draft soal beserta rubrik yang bisa langsung diterapkan.
+Dosen bisa menggunakan AI Chat Assistant saat membuat soal. Cukup deskripsikan soal yang diinginkan, dan AI akan menghasilkan draft soal beserta rubrik yang bisa langsung diterapkan.
 
 ## Database Schema
 
@@ -200,7 +209,7 @@ Dosen bisa menggunakan AI Chat Assistant saat membuat soal. Cukup deskripsikan s
 | `Soal` | Soal/tugas (judul, deskripsi, mata kuliah, PDF URL, submit token + expiry) |
 | `Indikator` | Rubrik penilaian (nama, bobot, rubrik, skor max) |
 | `Submission` | Jawaban mahasiswa (status, file ID, NIM) |
-| `HasilKoreasi` | Hasil koreksi (skor total, skor per indikator, feedback) |
+| `HasilKoreksi` | Hasil koreksi (skor total, skor per indikator + tinjauan, feedback, direviewOleh, reviewAktif) |
 
 ## API Endpoints
 
@@ -286,7 +295,7 @@ DosenAIAgent/
 │       └── src/
 │           ├── routes/          # API endpoints
 │           ├── controllers/     # Business logic
-│           └── services/        # Gemini, Drive, Callback
+│           └── services/        # assistantService (prompt AI), llm/ (provider + failover), drive, callback
 ```
 
 ## Kontribusi

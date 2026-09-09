@@ -434,9 +434,9 @@ export default function SettingsPage() {
                 detail="Token unik per soal"
               />
               <InfoCard
-                label="Google Gemini"
+                label="Multi-Provider LLM"
                 status={true}
-                detail="gemini-3.6-flash"
+                detail="Failover otomatis"
               />
               <InfoCard
                 label="Agent Service"

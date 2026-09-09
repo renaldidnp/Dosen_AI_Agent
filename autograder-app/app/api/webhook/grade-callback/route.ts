@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
 
   // ── Jalur normal: grading sukses ──
   const { submission_id, skor_total, skor_per_indikator, feedback, direview_oleh, review_aktif } = body;
+  const direviewOleh = typeof direview_oleh === "string" ? direview_oleh : null;
 
   if (!submission_id || skor_total === undefined || !skor_per_indikator || !feedback) {
     return NextResponse.json({ error: "Field wajib hilang: submission_id, skor_total, skor_per_indikator, feedback" }, { status: 400 });
@@ -107,6 +108,7 @@ export async function POST(req: NextRequest) {
       skorTotal: skor_total,
       feedback,
       link,
+      direviewOleh,
     });
     emailTerkirim = true;
   } catch (err) {

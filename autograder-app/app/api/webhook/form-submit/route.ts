@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { triggerGrading } from "@/lib/agentClient";
+import { moveSubmissionFile } from "@/lib/google-drive";
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Verifikasi secret dari Apps Script
     const secret = req.headers.get("x-webhook-secret");
     if (secret !== process.env.WEBHOOK_SECRET) {
       console.error("Webhook: secret tidak cocok");
@@ -12,39 +12,60 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { namaMahasiswa, nim, emailMahasiswa, soalId, driveFileId, driveFileUrl, formResponseId } = body;
+    const { kelasId, judulSoal, namaMahasiswa, nim, emailMahasiswa, driveFileId, driveFileUrl, formResponseId } = body;
 
-    console.log("Webhook diterima:", { namaMahasiswa, nim, soalId, formResponseId });
+    console.log("Webhook diterima:", { kelasId, judulSoal, namaMahasiswa, formResponseId });
 
-    // 2. Validasi field wajib
-    if (!soalId || !namaMahasiswa || !formResponseId) {
+    if (!kelasId || !judulSoal || !namaMahasiswa || !formResponseId) {
       console.error("Webhook: field wajib kosong", body);
-      return NextResponse.json({ error: "Field wajib kosong (soalId/namaMahasiswa/formResponseId)" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Field wajib kosong (kelasId/judulSoal/namaMahasiswa/formResponseId)" },
+        { status: 400 },
+      );
     }
 
-    // 3. Pastikan soal-nya memang ada (biar bukan foreign key error yang membingungkan)
-    const soal = await db.soal.findUnique({ where: { id: soalId } });
+    // Resolve soalId dari kombinasi kelasId + judulSoal (dropdown form cuma
+    // menyimpan teks judul, bukan ID — makanya di-lookup di sini, bukan diterima langsung).
+    const soal = await db.soal.findUnique({
+      where: { judul_kelasId: { judul: judulSoal, kelasId } },
+    });
+
     if (!soal) {
-      console.error("Webhook: soalId tidak ditemukan di database:", soalId);
-      return NextResponse.json({ error: `Soal dengan id ${soalId} tidak ditemukan` }, { status: 404 });
+      console.error("Webhook: soal tidak ditemukan untuk", { kelasId, judulSoal });
+      return NextResponse.json(
+        { error: `Soal dengan judul "${judulSoal}" tidak ditemukan di kelas ini.` },
+        { status: 404 },
+      );
     }
 
-    // 4. Cegah duplikat kalau Apps Script kekirim dua kali
     const existing = await db.submission.findUnique({ where: { formResponseId } });
     if (existing) {
       console.log("Webhook: submission sudah pernah diproses:", formResponseId);
       return NextResponse.json({ message: "Sudah diproses sebelumnya" }, { status: 200 });
     }
 
-    // 5. Simpan submission
+    // Pindahkan file jawaban ke folder kelas — non-blocking, kalau gagal tetap
+    // simpan submission dengan fileId/link asli dari Google Forms sebagai fallback.
+    let finalFileId = driveFileId;
+    let finalFileUrl = driveFileUrl;
+    try {
+      const moved = await moveSubmissionFile(driveFileId, kelasId);
+      if (moved) {
+        finalFileId = moved.fileId;
+        finalFileUrl = moved.webViewLink;
+      }
+    } catch (moveErr) {
+      console.error("Gagal memindahkan file jawaban ke folder kelas:", moveErr);
+    }
+
     const submission = await db.submission.create({
       data: {
-        soalId,
+        soalId: soal.id,
         namaMahasiswa,
         nim,
         emailMahasiswa,
-        driveFileId,
-        driveFileUrl,
+        driveFileId: finalFileId,
+        driveFileUrl: finalFileUrl,
         formResponseId,
         status: "diterima",
       },
@@ -52,14 +73,12 @@ export async function POST(req: NextRequest) {
 
     console.log("Submission tersimpan:", submission.id);
 
-    // 6. Ambil rubrik & trigger Hermes agent — dibungkus try/catch terpisah
-    //    biar kalau grading gagal, submission-nya TETAP tersimpan (tidak ikut rollback)
     try {
-      const indikator = await db.indikator.findMany({ where: { soalId } });
+      const indikator = await db.indikator.findMany({ where: { soalId: soal.id } });
 
       await triggerGrading({
         submission_id: submission.id,
-        file_id: driveFileId,
+        file_id: finalFileId,
         rubric: indikator.map((i) => ({
           indikatorId: i.id,
           nama: i.nama,
@@ -69,17 +88,10 @@ export async function POST(req: NextRequest) {
         })),
       });
 
-      await db.submission.update({
-        where: { id: submission.id },
-        data: { status: "diproses" },
-      });
+      await db.submission.update({ where: { id: submission.id }, data: { status: "diproses" } });
     } catch (gradingErr) {
       console.error("Gagal trigger grading untuk submission", submission.id, gradingErr);
-      await db.submission.update({
-        where: { id: submission.id },
-        data: { status: "gagal_grading" },
-      });
-      // Tetap return 200 karena submission-nya sudah berhasil disimpan
+      await db.submission.update({ where: { id: submission.id }, data: { status: "gagal_grading" } });
       return NextResponse.json({
         message: "Submission tersimpan, tapi grading gagal dipicu",
         submissionId: submission.id,

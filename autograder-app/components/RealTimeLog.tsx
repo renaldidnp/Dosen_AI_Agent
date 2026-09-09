@@ -51,9 +51,15 @@ export default function RealTimeLog({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+    const load = useCallback(async () => {
     try {
       const res = await fetch(endpoint, { cache: "no-store" });
+
+      if (res.status === 401) {
+        setError("Sesi login Anda berakhir. Silakan login ulang untuk melihat log aktivitas.");
+        setLoading(false);
+        return "unauthorized" as const;
+      }
 
       if (!res.ok) {
         throw new Error("Gagal memuat log");
@@ -61,9 +67,6 @@ export default function RealTimeLog({
 
       const data: { entries: ApiLogEntry[] } = await res.json();
 
-      // Format waktu hanya setelah data diterima di client.
-      // Dibatasi ke MAX_ENTRIES terbaru saja supaya list tidak menumpuk
-      // tanpa batas — asumsi API sudah mengurutkan dari yang terbaru.
       const withTime = data.entries
         .slice(0, MAX_ENTRIES)
         .map((e) => ({
@@ -85,12 +88,24 @@ export default function RealTimeLog({
     }
   }, [endpoint]);
 
-  useEffect(() => {
-    load();
+    useEffect(() => {
+    let stopped = false;
+    let interval: ReturnType<typeof setInterval>;
 
-    const interval = setInterval(load, POLL_INTERVAL_MS);
+    async function tick() {
+      const result = await load();
+      if (result === "unauthorized" && !stopped) {
+        clearInterval(interval);
+      }
+    }
 
-    return () => clearInterval(interval);
+    tick();
+    interval = setInterval(tick, POLL_INTERVAL_MS);
+
+    return () => {
+      stopped = true;
+      clearInterval(interval);
+    };
   }, [load]);
 
   return (

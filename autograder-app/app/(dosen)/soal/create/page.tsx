@@ -17,7 +17,6 @@ export default function CreateSoalPage() {
   const router = useRouter();
   const [judul, setJudul] = useState("");
   const [deskripsi, setDeskripsi] = useState("");
-  const [googleFormUrl, setGoogleFormUrl] = useState("");
   const [indikator, setIndikator] = useState<IndikatorInput[]>([emptyIndikator()]);
   const [saving, setSaving] = useState(false);
 
@@ -75,10 +74,9 @@ async function handleSubmit() {
     const res = await fetch("/api/soal", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+            body: JSON.stringify({
         judul,
         deskripsi,
-        googleFormUrl,
         kelasId: kelasId || null,
         mataKuliah: mataKuliah.trim() || null,
         indikator,
@@ -282,17 +280,6 @@ async function handleSubmit() {
                     placeholder="Jelaskan instruksi dan konteks soal untuk mahasiswa..."
                     value={deskripsi}
                     onChange={(e) => setDeskripsi(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-xs font-bold text-[var(--text-muted)]">
-                    Link Google Form
-                  </label>
-                  <input
-                    className={inputClass}
-                    placeholder="https://forms.google.com/..."
-                    value={googleFormUrl}
-                    onChange={(e) => setGoogleFormUrl(e.target.value)}
                   />
                 </div>
               </div>

@@ -34,12 +34,11 @@ model Kelas {
   nama          String   // contoh: "TI-A", "SI-Malam"
   angkatan      String   // contoh: "2022"
   driveFolderId String?  // cache: ID folder Drive untuk kelas ini (di dalam folder angkatan)
-
+  googleFormId  String?  // ← baru: ID Google Form khusus kelas ini
+  googleFormUrl String?  // ← baru: URL Google Form khusus kelas ini
   mahasiswa     Mahasiswa[]
   soal          Soal[]
-
   createdAt     DateTime @default(now())
-
   @@unique([nama, angkatan])
 }
 
@@ -49,23 +48,19 @@ model Soal {
   deskripsi      String?  @db.Text
   dosenId        String
   dosen          Dosen    @relation(fields: [dosenId], references: [id])
-
-  kelasId        String?           // ← baru, opsional (soal lama belum ada kelas)
-  kelas          Kelas?   @relation(fields: [kelasId], references: [id])  // ← baru
-
+  kelasId        String?
+  kelas          Kelas?   @relation(fields: [kelasId], references: [id])
   mataKuliah     String?
-
-  googleFormId   String?
-  googleFormUrl  String?
+  googleFormId   String?  // ← deprecated, dibiarkan untuk kompatibilitas data lama, tidak dipakai lagi
+  googleFormUrl  String?  // ← deprecated, dibiarkan untuk kompatibilitas data lama, tidak dipakai lagi
   driveFolderId  String?
-
   pdfUrl         String?
   pdfDriveFileId String?
-
   indikator      Indikator[]
   submission     Submission[]
-
   createdAt      DateTime @default(now())
+
+  @@unique([judul, kelasId])
 }
 
 model Indikator {

@@ -4,7 +4,8 @@ import { db } from "@/lib/db";
 
 const SETTING_KEY = "soal_pdf_folder_id";
 const ROOT_FOLDER_NAME = "Soal PDF - Autograder";
-const UNCATEGORIZED = "Tanpa Mata Kuliah"; // fallback kalau mataKuliah kosong
+const UNCATEGORIZED = "Tanpa Mata Kuliah";
+const JAWABAN_FOLDER_NAME = "Jawaban Mahasiswa";
 
 function getDriveClient() {
   const oauth2Client = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET);
@@ -53,7 +54,6 @@ async function getRootSoalFolder(): Promise<string> {
   return folderId;
 }
 
-/** Slug aman untuk dipakai sebagai key AppSetting (bukan nama folder — nama folder tetap pakai teks asli) */
 function toSettingKey(...parts: string[]): string {
   return parts
     .map((p) =>
@@ -66,27 +66,30 @@ function toSettingKey(...parts: string[]): string {
 }
 
 /**
- * Resolve folder tujuan lengkap: root/{angkatan}/{nama kelas}/{mata kuliah}
- * - Level angkatan+kelas di-cache di Kelas.driveFolderId (folder kelas, belum termasuk mata kuliah)
- * - Level mata kuliah di-cache di AppSetting, karena satu kelas bisa punya banyak mata kuliah
- * - Kalau soal tidak punya kelas (data lama): langsung taruh di root
+ * Ambil (atau buat kalau belum ada) folder root/angkatan/kelas untuk sebuah Kelas.
+ * Di-cache di Kelas.driveFolderId. Dipakai bersama oleh path PDF soal maupun
+ * path jawaban mahasiswa, supaya keduanya nempel di pohon folder yang sama per kelas.
  */
+async function getOrCreateKelasFolder(kelasId: string): Promise<string | null> {
+  const kelas = await db.kelas.findUnique({ where: { id: kelasId } });
+  if (!kelas) return null;
+  if (kelas.driveFolderId) return kelas.driveFolderId;
+
+  const root = await getRootSoalFolder();
+  const angkatanFolderId = await findOrCreateFolder(kelas.angkatan, root);
+  const kelasFolderId = await findOrCreateFolder(kelas.nama, angkatanFolderId);
+
+  await db.kelas.update({ where: { id: kelasId }, data: { driveFolderId: kelasFolderId } });
+  return kelasFolderId;
+}
+
 async function resolveTargetFolder(kelasId: string | null, mataKuliah: string | null): Promise<string> {
   const root = await getRootSoalFolder();
   if (!kelasId) return root;
 
-  const kelas = await db.kelas.findUnique({ where: { id: kelasId } });
-  if (!kelas) return root;
+  const kelasFolderId = await getOrCreateKelasFolder(kelasId);
+  if (!kelasFolderId) return root;
 
-  // Folder kelas (root/angkatan/kelas) — pakai cache di Kelas.driveFolderId
-  let kelasFolderId = kelas.driveFolderId;
-  if (!kelasFolderId) {
-    const angkatanFolderId = await findOrCreateFolder(kelas.angkatan, root);
-    kelasFolderId = await findOrCreateFolder(kelas.nama, angkatanFolderId);
-    await db.kelas.update({ where: { id: kelasId }, data: { driveFolderId: kelasFolderId } });
-  }
-
-  // Folder mata kuliah (root/angkatan/kelas/matkul) — cache di AppSetting per kelas+matkul
   const matkulName = mataKuliah?.trim() || UNCATEGORIZED;
   const matkulSettingKey = toSettingKey("matkul_folder", kelasId, matkulName);
 
@@ -103,7 +106,12 @@ async function resolveTargetFolder(kelasId: string | null, mataKuliah: string | 
   return matkulFolderId;
 }
 
-export async function uploadSoalPdf(buffer: Buffer, fileName: string, kelasId: string | null = null, mataKuliah: string | null = null): Promise<{ fileId: string; webViewLink: string }> {
+export async function uploadSoalPdf(
+  buffer: Buffer,
+  fileName: string,
+  kelasId: string | null = null,
+  mataKuliah: string | null = null,
+): Promise<{ fileId: string; webViewLink: string }> {
   const drive = getDriveClient();
   const folderId = await resolveTargetFolder(kelasId, mataKuliah);
 
@@ -118,4 +126,35 @@ export async function uploadSoalPdf(buffer: Buffer, fileName: string, kelasId: s
   const file = await drive.files.get({ fileId, fields: "webViewLink" });
 
   return { fileId, webViewLink: file.data.webViewLink! };
+}
+
+/**
+ * Memindahkan file jawaban mahasiswa (hasil upload dari Google Form) dari folder
+ * default milik Google Forms, ke folder root/angkatan/kelas/Jawaban Mahasiswa
+ * milik kelas terkait. Dipanggil dari webhook setelah submission diterima.
+ *
+ * Mengembalikan null (tanpa throw) kalau kelasId tidak valid, supaya pemanggil
+ * bisa memilih untuk tetap menyimpan submission dengan link/fileId lama sebagai fallback.
+ */
+export async function moveSubmissionFile(
+  fileId: string,
+  kelasId: string,
+): Promise<{ fileId: string; webViewLink: string } | null> {
+  const kelasFolderId = await getOrCreateKelasFolder(kelasId);
+  if (!kelasFolderId) return null;
+
+  const drive = getDriveClient();
+  const jawabanFolderId = await findOrCreateFolder(JAWABAN_FOLDER_NAME, kelasFolderId);
+
+  const current = await drive.files.get({ fileId, fields: "parents" });
+  const previousParents = current.data.parents?.join(",");
+
+  const updated = await drive.files.update({
+    fileId,
+    addParents: jawabanFolderId,
+    removeParents: previousParents,
+    fields: "id, webViewLink",
+  });
+
+  return { fileId: updated.data.id!, webViewLink: updated.data.webViewLink! };
 }

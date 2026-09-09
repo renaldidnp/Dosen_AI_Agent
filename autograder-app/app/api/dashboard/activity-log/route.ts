@@ -1,23 +1,24 @@
+import { NextRequest, NextResponse } from "next/server";
+import { verifyToken } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
 
-// GET /api/activity-log
-// Mengembalikan aktivitas submission terbaru (diterima -> diproses -> selesai)
-// sebagai "log" yang dipakai oleh komponen RealTimeLog.
-//
-// CATATAN: sesuaikan nama relasi `soal` dan `hasilKoreksi` di bawah ini
-// dengan nama relasi yang ada di schema.prisma Anda (nama tabel di SQL
-// dump adalah `soal` dan `hasilkoreksi`, tapi nama field relasi di Prisma
-// client bisa berbeda tergantung penamaan model Anda).
+export async function GET(req: NextRequest) {
+  const token = req.cookies.get("session_token")?.value;
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized. Cookie token tidak ditemukan." }, { status: 401 });
+  }
+  const user = await verifyToken(token);
+  if (!user || !user.id) {
+    return NextResponse.json({ error: "Unauthorized. Token tidak valid atau kedaluwarsa." }, { status: 401 });
+  }
 
-export async function GET() {
   try {
     const submissions = await db.submission.findMany({
       orderBy: { createdAt: "desc" },
       take: 10,
       include: {
         soal: { select: { judul: true } },
-        hasilKoreksi: true, // ganti ke `hasilkoreksi` jika nama relasi Prisma Anda begitu
+        hasilKoreksi: true,
       },
     });
 

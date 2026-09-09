@@ -29,6 +29,8 @@ CREATE TABLE `Kelas` (
     `nama` VARCHAR(191) NOT NULL,
     `angkatan` VARCHAR(191) NOT NULL,
     `driveFolderId` VARCHAR(191) NULL,
+    `googleFormId` VARCHAR(191) NULL,
+    `googleFormUrl` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `Kelas_nama_angkatan_key`(`nama`, `angkatan`),
@@ -50,6 +52,7 @@ CREATE TABLE `Soal` (
     `pdfDriveFileId` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    UNIQUE INDEX `Soal_judul_kelasId_key`(`judul`, `kelasId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

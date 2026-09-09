@@ -3,6 +3,7 @@ import { verifyToken } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateSoalPdf } from "@/lib/generate-soal-pdf";
 import { uploadSoalPdf } from "@/lib/google-drive";
+import { addSoalToFormDropdown } from "@/lib/google-forms";
 import { sendNotifikasiSoalBaruEmail } from "@/lib/mailer";
 
 export async function GET() {
@@ -14,115 +15,86 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  // 1. Ambil token JWT dari Cookie
+  // 1. Auth
   const token = req.cookies.get("session_token")?.value;
-
   if (!token) {
-    return NextResponse.json(
-      { error: "Unauthorized. Cookie token tidak ditemukan." },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized. Cookie token tidak ditemukan." }, { status: 401 });
   }
 
-    // 2. Verifikasi JWT Payload
   const user = await verifyToken(token);
-
   if (!user || !user.id) {
-    return NextResponse.json(
-      { error: "Unauthorized. Token tidak valid atau kedaluwarsa." },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized. Token tidak valid atau kedaluwarsa." }, { status: 401 });
   }
 
-  // 3. Ambil data dari body request
+  // 2. Ambil & validasi body
   const body = await req.json();
   const {
     judul,
     deskripsi,
     kelasId,
     mataKuliah,
-    googleFormId,
-    googleFormUrl,
+    googleFormId, // sudah tidak dipakai lagi (deprecated, lihat catatan di schema), dibiarkan diterima tapi diabaikan
     driveFolderId,
     indikator,
   } = body;
 
-  // 4. Validasi input dasar
   if (!judul || typeof judul !== "string" || !judul.trim()) {
-    return NextResponse.json(
-      { error: "Judul soal wajib diisi." },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Judul soal wajib diisi." }, { status: 400 });
   }
 
   if (!kelasId || typeof kelasId !== "string") {
-    return NextResponse.json(
-      { error: "Kelas wajib dipilih." },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Kelas wajib dipilih." }, { status: 400 });
   }
 
   if (!mataKuliah || typeof mataKuliah !== "string" || !mataKuliah.trim()) {
-    return NextResponse.json(
-      { error: "Mata kuliah wajib diisi." },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Mata kuliah wajib diisi." }, { status: 400 });
   }
 
   if (!Array.isArray(indikator) || indikator.length === 0) {
-    return NextResponse.json(
-      { error: "Minimal harus ada satu indikator penilaian." },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Minimal harus ada satu indikator penilaian." }, { status: 400 });
   }
 
   for (const [i, ind] of indikator.entries()) {
     if (!ind?.nama || typeof ind.nama !== "string" || !ind.nama.trim()) {
-      return NextResponse.json(
-        { error: `Indikator ke-${i + 1}: nama wajib diisi.` },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: `Indikator ke-${i + 1}: nama wajib diisi.` }, { status: 400 });
     }
     if (!ind?.rubrik || typeof ind.rubrik !== "string" || !ind.rubrik.trim()) {
-      return NextResponse.json(
-        { error: `Indikator ke-${i + 1}: rubrik wajib diisi.` },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: `Indikator ke-${i + 1}: rubrik wajib diisi.` }, { status: 400 });
     }
     if (typeof ind.bobot !== "number" || ind.bobot <= 0) {
-      return NextResponse.json(
-        { error: `Indikator ke-${i + 1}: bobot harus berupa angka lebih dari 0.` },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: `Indikator ke-${i + 1}: bobot harus berupa angka lebih dari 0.` }, { status: 400 });
     }
     if (ind.skorMax !== undefined && (typeof ind.skorMax !== "number" || ind.skorMax <= 0)) {
-      return NextResponse.json(
-        { error: `Indikator ke-${i + 1}: skorMax harus berupa angka lebih dari 0.` },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: `Indikator ke-${i + 1}: skorMax harus berupa angka lebih dari 0.` }, { status: 400 });
     }
   }
 
   const totalBobot = indikator.reduce((sum: number, ind: { bobot: number }) => sum + ind.bobot, 0);
   if (Math.abs(totalBobot - 100) > 0.01) {
-    return NextResponse.json(
-      { error: `Total bobot semua indikator harus 100%. Saat ini: ${totalBobot}%.` },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: `Total bobot semua indikator harus 100%. Saat ini: ${totalBobot}%.` }, { status: 400 });
   }
 
-    // 5. Simpan Soal dengan dosenId dari payload JWT (user.id)
+  // 3. Pastikan kelas ada, sekaligus ambil googleFormId/googleFormUrl-nya
+  const kelas = await db.kelas.findUnique({ where: { id: kelasId } });
+  if (!kelas) {
+    return NextResponse.json({ error: "Kelas tidak ditemukan." }, { status: 400 });
+  }
+
+  // 4. Auto-prefix judul dengan [mataKuliah], supaya dropdown form kelas
+  // (yang tercampur lintas matkul) tetap mudah dibedakan mahasiswa.
+  const mataKuliahTrimmed = mataKuliah.trim();
+  const judulFinal = `[${mataKuliahTrimmed}] ${judul.trim()}`;
+
+  // 5. Simpan Soal
   let soal;
   try {
     soal = await db.soal.create({
       data: {
-        judul: judul.trim(),
+        judul: judulFinal,
         deskripsi,
         dosenId: user.id,
         kelasId,
-        mataKuliah: mataKuliah.trim(),
-        googleFormId,
-        googleFormUrl,
+        mataKuliah: mataKuliahTrimmed,
         driveFolderId,
         indikator: { create: indikator },
       },
@@ -130,18 +102,13 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: any) {
     console.error("Gagal membuat soal:", err);
-
-    if (err.code === "P2003") {
+    if (err.code === "P2002") {
       return NextResponse.json(
-        { error: "Kelas yang dipilih tidak ditemukan." },
-        { status: 400 }
+        { error: `Soal dengan judul "${judulFinal}" sudah ada di kelas ini.` },
+        { status: 409 },
       );
     }
-
-    return NextResponse.json(
-      { error: "Gagal menyimpan soal ke database." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Gagal menyimpan soal ke database." }, { status: 500 });
   }
 
   // 6. Generate & Upload PDF Soal
@@ -152,12 +119,7 @@ export async function POST(req: NextRequest) {
       deskripsi: soal.deskripsi,
       indikator: soal.indikator,
     });
-    const { fileId, webViewLink } = await uploadSoalPdf(
-      pdfBuffer,
-      `${soal.judul}.pdf`,
-      soal.kelasId,
-      soal.mataKuliah
-    );
+    const { fileId, webViewLink } = await uploadSoalPdf(pdfBuffer, `${soal.judul}.pdf`, soal.kelasId, soal.mataKuliah);
 
     await db.soal.update({
       where: { id: soal.id },
@@ -169,15 +131,26 @@ export async function POST(req: NextRequest) {
     pdfResult = { pdfUrl: null, pdfWarning: "PDF gagal dibuat, coba generate ulang." };
   }
 
- // 7. Kirim Notifikasi Email ke Mahasiswa
+  // 7. Tambahkan soal ini ke dropdown Google Form milik kelas (non-blocking).
+  let formDropdownWarning: string | undefined;
+  if (!kelas.googleFormId) {
+    formDropdownWarning = "Kelas ini belum punya Google Form (mungkin gagal saat kelas dibuat). Soal tidak otomatis masuk dropdown.";
+  } else {
+    try {
+      await addSoalToFormDropdown(kelas.googleFormId, soal.judul);
+    } catch (err) {
+      console.error("Gagal menambahkan soal ke dropdown form:", err);
+      formDropdownWarning = "Soal tersimpan, tapi gagal ditambahkan otomatis ke dropdown Google Form. Tambahkan manual.";
+    }
+  }
+
+  // 8. Kirim Notifikasi Email ke Mahasiswa — googleFormUrl sekarang dari Kelas, bukan Soal.
   let notifikasiInfo: { terkirim: number; gagal: number; dilewati?: string } = { terkirim: 0, gagal: 0 };
 
-  if (!soal.kelasId) {
-    notifikasiInfo.dilewati = "Soal tidak terhubung ke kelas manapun, notifikasi tidak dikirim.";
-  } else if (!soal.googleFormUrl) {
-    notifikasiInfo.dilewati = "googleFormUrl kosong, notifikasi tidak dikirim.";
+  if (!kelas.googleFormUrl) {
+    notifikasiInfo.dilewati = "Kelas belum punya Google Form, notifikasi tidak dikirim.";
   } else {
-    const mahasiswaKelas = await db.mahasiswa.findMany({ where: { kelasId: soal.kelasId } });
+    const mahasiswaKelas = await db.mahasiswa.findMany({ where: { kelasId: soal.kelasId! } });
 
     if (mahasiswaKelas.length === 0) {
       notifikasiInfo.dilewati = "Tidak ada mahasiswa terdaftar di kelas ini.";
@@ -190,10 +163,10 @@ export async function POST(req: NextRequest) {
             judulSoal: soal.judul,
             mataKuliah: soal.mataKuliah,
             deskripsi: soal.deskripsi,
-            googleFormUrl: soal.googleFormUrl!,
+            googleFormUrl: kelas.googleFormUrl!,
             pdfUrl: pdfResult.pdfUrl,
-          })
-        )
+          }),
+        ),
       );
 
       results.forEach((r, i) => {
@@ -212,5 +185,8 @@ export async function POST(req: NextRequest) {
     include: { indikator: true },
   });
 
-  return NextResponse.json({ ...updated, ...pdfResult, notifikasi: notifikasiInfo }, { status: 201 });
+  return NextResponse.json(
+    { ...updated, ...pdfResult, formDropdownWarning, notifikasi: notifikasiInfo },
+    { status: 201 },
+  );
 }

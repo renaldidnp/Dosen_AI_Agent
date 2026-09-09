@@ -1,21 +1,29 @@
 import { llmClient } from "./llm/client";
-import { RubrikIndikator, HasilIndikatorRaw, GenerateSoalRequest, SoalDraftResult, ChatHistoryItem } from "../types";
+import {
+  RubrikIndikator,
+  HasilIndikatorRaw,
+  ReviewResult,
+  GenerateSoalRequest,
+  SoalDraftResult,
+  ChatHistoryItem,
+} from "../types";
 
 // ==========================================
 // Prompt & parse ada di sini; pemilihan provider
 // (Gemini / OpenRouter / Groq, failover otomatis)
-// ditangani oleh src/services/llm/*.
+// ditangani oleh src/services/llm/*. Nama fungsi
+// sengaja netral-provider karena bisa memakai LLM apa pun.
 // ==========================================
 
 // ==========================================
-// 1. MODUL PENILAIAN JAWABAN MAHASISWA
+// 1. MODUL PENILAIAN JAWABAN MAHASISWA (PASS 1)
 // ==========================================
 
 function buildGradePrompt(jawabanText: string, rubric: RubrikIndikator[]): { system: string; prompt: string } {
   const rubrikText = rubric.map((r) => `- indikatorId: "${r.indikatorId}", nama: "${r.nama}", bobot: ${r.bobot}%, skorMax: ${r.skorMax}\n  Kriteria: ${r.rubrik}`).join("\n");
 
   return {
-    system: "Kamu adalah asisten dosen yang menilai jawaban mahasiswa berdasarkan rubrik penilaian. Balas HANYA dengan JSON valid, tanpa teks lain, tanpa markdown code block.",
+    system: "Kamu adalah Agent Penilai yang menilai jawaban mahasiswa secara objektif berdasarkan rubrik penilaian. Balas HANYA dengan JSON valid, tanpa teks lain, tanpa markdown code block.",
     prompt: `JAWABAN MAHASISWA:
 """
 ${jawabanText}
@@ -36,20 +44,80 @@ PENTING: Balas HANYA dengan JSON valid, tanpa teks lain, tanpa markdown code blo
   };
 }
 
-export async function gradeWithGemini(jawabanText: string, rubric: RubrikIndikator[]): Promise<{ hasilIndikator: HasilIndikatorRaw[]; feedbackUmum: string }> {
+export async function gradeAnswer(jawabanText: string, rubric: RubrikIndikator[]): Promise<{ hasilIndikator: HasilIndikatorRaw[]; feedbackUmum: string; provider: string; model: string }> {
   const { system, prompt } = buildGradePrompt(jawabanText, rubric);
 
-  const rawText = await llmClient.generateJson({ prompt, system, temperature: 0.2 });
+  const { text, provider, model } = await llmClient.generateJsonDetailed({ prompt, system, temperature: 0.2 });
 
-  const parsed = JSON.parse(rawText);
+  const parsed = JSON.parse(text);
   return {
     hasilIndikator: parsed.hasilIndikator,
     feedbackUmum: parsed.feedbackUmum ?? "",
+    provider,
+    model,
   };
 }
 
 // ==========================================
-// 2. MODUL GENERASI SOAL & RUBRIK
+// 2. MODUL VERIFIKASI / TINJAUAN (PASS 2)
+// ==========================================
+
+function buildReviewPrompt(
+  jawabanText: string,
+  rubric: RubrikIndikator[],
+  hasilPenilai: HasilIndikatorRaw[]
+): { system: string; prompt: string } {
+  const rubrikText = rubric.map((r) => `- indikatorId: "${r.indikatorId}", nama: "${r.nama}", bobot: ${r.bobot}%, skorMax: ${r.skorMax}\n  Kriteria: ${r.rubrik}`).join("\n");
+  const hasilText = hasilPenilai.map((h) => `- ${h.indikatorId}: skor ${h.skor}, feedback: ${h.feedback}`).join("\n");
+
+  return {
+    system: "Kamu adalah Agent Peninjau yang berpikir kritis untuk memverifikasi penilaian yang dibuat Agent Penilai. Periksa ulang jawaban mahasiswa terhadap rubrik, lalu putuskan apakah skor Agent Penilai sudah tepat. Balas HANYA dengan JSON valid, tanpa teks lain, tanpa markdown code block.",
+    prompt: `JAWABAN MAHASISWA:
+"""
+${jawabanText}
+"""
+
+RUBRIK PENILAIAN:
+${rubrikText}
+
+HASIL AGENT PENILAI (pass 1):
+${hasilText}
+
+Tugasmu: untuk SETIAP indikator, verifikasi apakah skor dan feedback Agent Penilai sudah sesuai dengan bukti di jawaban:
+- "setuju": skor penilai sudah tepat, pakai skorAkhir = skor penilai.
+- "koreksi": kamu menemukan kelebihan yang tidak dinilai / kekurangan yang tidak dihukum / kesalahan skor → beri skorAkhir yang lebih adil.
+Hindari "koreksi" tanpa alasan yang kuat dan terpaku pada bukti.
+
+PENTING: Balas HANYA dengan JSON valid, tanpa teks lain, tanpa markdown code block, dengan format persis seperti ini:
+{
+  "hasilIndikator": [
+    { "indikatorId": "...", "keputusan": "setuju" | "koreksi", "skorAkhir": 0, "alasan": "..." }
+  ],
+  "catatan": "..."
+}`,
+  };
+}
+
+export async function reviewAnswer(
+  jawabanText: string,
+  rubric: RubrikIndikator[],
+  hasilPenilai: HasilIndikatorRaw[]
+): Promise<ReviewResult & { provider: string; model: string }> {
+  const { system, prompt } = buildReviewPrompt(jawabanText, rubric, hasilPenilai);
+
+  const { text, provider, model } = await llmClient.generateJsonDetailed({ prompt, system, temperature: 0.1 });
+
+  const parsed = JSON.parse(text);
+  return {
+    hasilIndikator: parsed.hasilIndikator,
+    catatan: parsed.catatan ?? "",
+    provider,
+    model,
+  };
+}
+
+// ==========================================
+// 3. MODUL GENERASI SOAL & RUBRIK
 // ==========================================
 
 const soalSchema = {
@@ -79,7 +147,7 @@ function formatHistory(history: ChatHistoryItem[]): string {
   return history.map((h) => `${h.role === "user" ? "Dosen" : "Asisten"}: ${h.content}`).join("\n");
 }
 
-export async function generateSoalWithGemini(payload: GenerateSoalRequest): Promise<{ reply: string; draft: SoalDraftResult }> {
+export async function generateSoalDraft(payload: GenerateSoalRequest): Promise<{ reply: string; draft: SoalDraftResult }> {
   const system = `Anda adalah asisten dosen untuk menyusun soal ujian/tugas beserta indikator penilaiannya.
 Total bobot semua indikator HARUS berjumlah tepat 100.
 skorMax default 100 kecuali dosen minta lain.

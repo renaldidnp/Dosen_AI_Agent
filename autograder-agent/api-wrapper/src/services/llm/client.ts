@@ -29,6 +29,14 @@ class LLMClient {
    * Mengembalikan teks mentah (diharapkan JSON) seperti yang dihasilkan model.
    */
   async generateJson(input: GenerateJsonInput): Promise<string> {
+    const { text } = await this.generateJsonDetailed(input);
+    return text;
+  }
+
+  /** Sama dengan generateJson, tapi sekalian membawa info provider & model yang dipakai. */
+  async generateJsonDetailed(
+    input: GenerateJsonInput
+  ): Promise<{ text: string; provider: string; model: string }> {
     const order = providerOrder();
     const errors: string[] = [];
 
@@ -46,7 +54,7 @@ class LLMClient {
       try {
         const raw = await provider.generateRaw(input);
         console.log(`[llm] ${name} (${provider.model}) sukses untuk prompt ${input.prompt.length} chars`);
-        return raw;
+        return { text: raw, provider: name, model: provider.model };
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         console.warn(`[llm] ${name} gagal: ${msg}`);

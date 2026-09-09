@@ -18,12 +18,35 @@ export type HasilIndikatorRaw = {
   feedback: string;
 };
 
+// Keputusan Agent Peninjau (pass 2) per indikator
+export type ReviewIndikator = {
+  indikatorId: string;
+  keputusan: "setuju" | "koreksi";
+  skorAkhir: number;
+  alasan: string;
+};
+
+// Hasil lengkap Agent Peninjau
+export type ReviewResult = {
+  hasilIndikator: ReviewIndikator[];
+  catatan: string;
+};
+
+// Info review yang ditempel per indikator pada skorPerIndikator (untuk UI)
+export type IndikatorReviewInfo = {
+  keputusan: "setuju" | "koreksi";
+  skorAwal: number;
+  skorAkhir: number;
+  alasan: string;
+};
+
 // Bentuk akhir yang cocok dengan field skorPerIndikator (Json) di model HasilKoreksi
 export type HasilIndikatorFinal = {
   indikatorId: string;
   nama: string;
   skor: number;
   catatan: string;
+  review?: IndikatorReviewInfo | null;
 };
 
 export type GradingResult = {
@@ -31,6 +54,8 @@ export type GradingResult = {
   skorTotal: number;
   skorPerIndikator: HasilIndikatorFinal[];
   feedback: string;
+  direviewOleh?: string | null;
+  reviewAktif?: boolean;
 };
 
 export type GradingErrorResult = {

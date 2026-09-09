@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Jalur normal: grading sukses ──
-  const { submission_id, skor_total, skor_per_indikator, feedback } = body;
+  const { submission_id, skor_total, skor_per_indikator, feedback, direview_oleh, review_aktif } = body;
 
   if (!submission_id || skor_total === undefined || !skor_per_indikator || !feedback) {
     return NextResponse.json({ error: "Field wajib hilang: submission_id, skor_total, skor_per_indikator, feedback" }, { status: 400 });
@@ -68,12 +68,16 @@ export async function POST(req: NextRequest) {
         skorTotal: skor_total,
         skorPerIndikator: skor_per_indikator,
         feedback,
+        direviewOleh: typeof direview_oleh === "string" ? direview_oleh : null,
+        reviewAktif: typeof review_aktif === "boolean" ? review_aktif : true,
       },
       create: {
         submissionId: submission_id,
         skorTotal: skor_total,
         skorPerIndikator: skor_per_indikator,
         feedback,
+        direviewOleh: typeof direview_oleh === "string" ? direview_oleh : null,
+        reviewAktif: typeof review_aktif === "boolean" ? review_aktif : true,
       },
     });
 

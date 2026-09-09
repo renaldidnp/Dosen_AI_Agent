@@ -29,6 +29,8 @@ export async function sendGradingCallback(result: GradingResult): Promise<void> 
     skor_total: result.skorTotal,
     skor_per_indikator: result.skorPerIndikator,
     feedback: result.feedback,
+    direview_oleh: result.direviewOleh ?? null,
+    review_aktif: result.reviewAktif ?? false,
     status: "success",
   });
 }

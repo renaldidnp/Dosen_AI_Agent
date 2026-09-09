@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { GenerateSoalRequest } from "../types";
-import { generateSoalWithGemini } from "../services/geminiService";
+import { generateSoalDraft } from "../services/assistantService";
 
 export async function handleGenerateSoalRequest(req: Request, res: Response) {
   const payload = req.body as GenerateSoalRequest;
@@ -13,7 +13,7 @@ export async function handleGenerateSoalRequest(req: Request, res: Response) {
 
   try {
     // Ini SINKRON (beda dengan /grade), karena frontend chat menunggu balasan langsung
-    const { reply, draft } = await generateSoalWithGemini({ prompt: payload.prompt, history });
+    const { reply, draft } = await generateSoalDraft({ prompt: payload.prompt, history });
     return res.status(200).json({ reply, draft });
   } catch (err) {
     console.error("Generate soal gagal:", err);

@@ -11,6 +11,14 @@ import {
 } from "lucide-react";
 import SubmissionList from "./SubmissionList";
 
+type IndikatorSkor = {
+    indikatorId: string;
+    nama: string;
+    skor: number;
+    catatan: string;
+    review?: { keputusan: "setuju" | "koreksi"; skorAwal: number; skorAkhir: number; alasan: string } | null;
+};
+
 export default async function DaftarSubmissionPage({
   params,
 }: {
@@ -129,6 +137,9 @@ export default async function DaftarSubmissionPage({
                 ? {
                     skorTotal: s.hasilKoreksi.skorTotal,
                     feedback: s.hasilKoreksi.feedback,
+                    direviewOleh: s.hasilKoreksi.direviewOleh,
+                    reviewAktif: s.hasilKoreksi.reviewAktif,
+                    skorPerIndikator: s.hasilKoreksi.skorPerIndikator as unknown as IndikatorSkor[] | undefined,
                   }
                 : null,
             }))}

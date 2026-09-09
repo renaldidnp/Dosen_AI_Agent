@@ -3,9 +3,27 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, FolderOpenDot, X } from "lucide-react";
 
+type IndikatorReview = {
+    keputusan: "setuju" | "koreksi";
+    skorAwal: number;
+    skorAkhir: number;
+    alasan: string;
+};
+
+type IndikatorSkor = {
+    indikatorId: string;
+    nama: string;
+    skor: number;
+    catatan: string;
+    review?: IndikatorReview | null;
+};
+
 type HasilKoreksi = {
     skorTotal: number;
     feedback: string;
+    direviewOleh?: string | null;
+    reviewAktif?: boolean;
+    skorPerIndikator?: IndikatorSkor[];
 } | null;
 
 export type SubmissionRow = {
@@ -92,6 +110,14 @@ export default function SubmissionList({ submissions }: { submissions: Submissio
                                     <h3 className="font-heading text-sm font-bold text-[var(--text)] truncate">
                                         {s.namaMahasiswa}
                                     </h3>
+                                    {s.hasilKoreksi?.direviewOleh && (
+                                        <span
+                                            title={`${s.hasilKoreksi.direviewOleh}`}
+                                            className="inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold bg-[var(--accent-soft)] text-[var(--accent-ink)] border-[var(--accent-border)]"
+                                        >
+                                            &#10003; Direview
+                                        </span>
+                                    )}
                                     <span
                                         className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold ${style.className}`}
                                     >
@@ -206,6 +232,42 @@ export default function SubmissionList({ submissions }: { submissions: Submissio
                                         {active.hasilKoreksi.feedback}
                                     </p>
                                 )}
+                            </div>
+                        )}
+
+                        {active.hasilKoreksi?.direviewOleh && (
+                            <div className="px-5 py-3 border-b border-[var(--border-soft)] bg-[var(--accent-soft)]">
+                                <p className="text-[10px] font-bold text-[var(--accent-ink)] uppercase tracking-wider mb-1.5">
+                                    Tinjauan Agent Peninjau
+                                </p>
+                                <p className="text-xs text-[var(--text-muted)] mb-2">
+                                    {active.hasilKoreksi.direviewOleh}
+                                </p>
+                                <ul className="space-y-1.5">
+                                    {active.hasilKoreksi.skorPerIndikator?.map((ind) =>
+                                        ind.review ? (
+                                            <li
+                                                key={ind.indikatorId}
+                                                className="text-xs text-[var(--text)] flex items-start gap-2"
+                                            >
+                                                <span className="inline-flex items-center gap-1 shrink-0 font-bold">
+                                                    {ind.review.keputusan === "koreksi" ? (
+                                                        <span className="text-[var(--warning-ink)]">
+                                                            {ind.review.skorAwal} &#8594; {ind.review.skorAkhir}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[var(--success-ink)]">&#10003; {ind.review.skorAkhir}</span>
+                                                    )}
+                                                </span>
+                                                <span className="text-[var(--text-muted)]">
+                                                    <span className="font-semibold text-[var(--text)]">{ind.nama}</span>
+                                                    {" — "}
+                                                    {ind.review.alasan}
+                                                </span>
+                                            </li>
+                                        ) : null
+                                    )}
+                                </ul>
                             </div>
                         )}
 

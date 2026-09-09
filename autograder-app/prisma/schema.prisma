@@ -102,8 +102,10 @@ model HasilKoreksi {
   submission      Submission @relation(fields: [submissionId], references: [id])
 
   skorTotal       Float
-  skorPerIndikator Json    // [{ indikatorId, nama, skor, catatan }]
+  skorPerIndikator Json    // [{ indikatorId, nama, skor, catatan, review? }]
   feedback        String   @db.Text
+  direviewOleh    String?
+  reviewAktif     Boolean  @default(true)
 
   emailTerkirim   Boolean  @default(false)
   createdAt       DateTime @default(now())

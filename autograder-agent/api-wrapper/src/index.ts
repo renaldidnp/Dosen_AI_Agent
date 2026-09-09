@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import gradeRouter from "./routes/grade";
 import generateSoalRouter from "./routes/generateSoal"; // ← tambahan
+import { llmClient } from "./services/llm/client";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -27,4 +28,11 @@ app.get("/", (_req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Autograder Agent jalan di http://localhost:${PORT}`);
+  const llmInfo = llmClient.describe();
+  console.log(`[llm] Urutan provider: ${llmInfo.order.join(" → ") || "(kosong)"}`);
+  for (const p of llmInfo.providers) {
+    console.log(
+      `[llm]   ${p.name}${p.available ? "" : " (key belum diset)"} — model: ${p.model}`
+    );
+  }
 });

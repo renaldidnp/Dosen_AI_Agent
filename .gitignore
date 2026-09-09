@@ -55,3 +55,11 @@ service-account.json
 
 # Google Apps Script
 google-form-integration/apps-script/config.gs
+
+# ==========================================
+# Archify (Architecture Diagrams)
+# ==========================================
+*-architecture.json
+*-architecture.html
+*-architecture.visual-check.json
+*-architecture.visual-check.html

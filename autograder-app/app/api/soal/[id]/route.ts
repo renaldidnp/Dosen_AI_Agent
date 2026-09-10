@@ -33,7 +33,35 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  await db.soal.delete({ where: { id } });
+  try {
+    // Hapus berantai: GradingTrace & HasilKoreksi → Submission → Indikator → Soal
+    await db.$transaction(async (tx) => {
+      await tx.gradingTrace.deleteMany({
+        where: { submission: { soalId: id } },
+      });
+
+      await tx.hasilKoreksi.deleteMany({
+        where: { submission: { soalId: id } },
+      });
+
+      await tx.submission.deleteMany({ where: { soalId: id } });
+
+      await tx.indikator.deleteMany({ where: { soalId: id } });
+
+      await tx.soal.delete({ where: { id } });
+    });
+  } catch (err: any) {
+    console.error("Gagal menghapus soal:", err);
+    if (err?.code === "P2003") {
+      return NextResponse.json(
+        {
+          error: "Soal masih memiliki data terkait (submission/hasil koreksi) yang gagal dihapus.",
+        },
+        { status: 409 },
+      );
+    }
+    return NextResponse.json({ error: "Gagal menghapus soal. Coba lagi." }, { status: 500 });
+  }
 
   return NextResponse.json({ success: true });
 }

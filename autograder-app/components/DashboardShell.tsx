@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   LayoutDashboard,
   Database,
   School,
   Settings,
-  Search,
   HelpCircle,
   Sun,
   Moon,
@@ -18,8 +17,13 @@ import {
   Loader2,
   Menu,
   X,
+  UserRound,
+  ShieldCheck,
+  Bell,
 } from "lucide-react";
 import { useTheme } from "@/app/theme-provider";
+import GlobalSearch from "./GlobalSearch";
+import { useProfile, avatarInitials } from "./useProfile";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Beranda", icon: LayoutDashboard },
@@ -36,13 +40,39 @@ export default function DashboardShell({
   const pathname = usePathname();
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
+  const { profile, loading: profileLoading } = useProfile();
+
   const [loggingOut, setLoggingOut] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Tutup drawer otomatis setiap kali pindah halaman (mis. dari nav link)
+  // Tutup drawer otomatis setiap kali pindah halaman
   useEffect(() => {
     setSidebarOpen(false);
+    setProfileMenuOpen(false);
   }, [pathname]);
+
+  // Tutup dropdown profil saat klik di luar / tekan Escape
+  useEffect(() => {
+    function onMouseDown(e: MouseEvent) {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(e.target as Node)
+      ) {
+        setProfileMenuOpen(false);
+      }
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setProfileMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -54,6 +84,10 @@ export default function DashboardShell({
       router.push("/auth/login");
     }
   }
+
+  const nama = profile?.nama ?? "Dosen";
+  const email = profile?.email ?? "Belum terautentikasi";
+  const initials = avatarInitials(profile?.nama);
 
   return (
     <div
@@ -88,7 +122,7 @@ export default function DashboardShell({
           h-screen w-[16.5rem]
           bg-[var(--bg-panel)]
           border-r border-[var(--border)]
-          flex flex-col justify-between
+          flex flex-col
           shadow-sm lg:shadow-none
           transition-transform duration-300
           lg:translate-x-0
@@ -105,7 +139,7 @@ export default function DashboardShell({
                   bg-[var(--accent)]
                   text-[var(--accent-fg)]
                   flex items-center justify-center
-                  shrink-0
+                  shrink-0 shadow-sm
                 "
               >
                 <Sparkles className="w-5 h-5" />
@@ -139,7 +173,8 @@ export default function DashboardShell({
 
             <nav className="flex flex-col gap-1.5">
               {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-                const active = pathname?.startsWith(href);
+                const active =
+                  pathname === href || pathname?.startsWith(href + "/");
 
                 return (
                   <Link
@@ -167,8 +202,26 @@ export default function DashboardShell({
           </div>
         </div>
 
-        {/* Bottom: system links */}
-        <div className="px-4 py-5 border-t border-[var(--border-soft)] bg-[var(--bg)]/40 shrink-0">
+        {/* Bottom: kartu user + pintasan sistem */}
+        <div className="px-4 py-5 border-t border-[var(--border-soft)] bg-[var(--bg)]/40 shrink-0 space-y-2">
+          {/* Kartu user */}
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[var(--accent-soft)] border border-[var(--accent-border)]">
+            <div className="w-10 h-10 rounded-full bg-[var(--accent)] text-[var(--accent-fg)] flex items-center justify-center text-sm font-extrabold shrink-0 ring-2 ring-[var(--accent-border)]">
+              {profileLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : initials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold text-[var(--accent-ink)] leading-tight truncate">
+                {nama}
+              </p>
+              <p className="text-[11px] text-[var(--accent-ink)]/70 truncate leading-tight mt-0.5">
+                {email}
+              </p>
+            </div>
+            <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--accent)] text-[var(--accent-fg)] text-[10px] font-bold">
+              <ShieldCheck className="w-3 h-3" />
+              Dosen
+            </span>
+          </div>
 
           <nav className="flex flex-col gap-1">
             <button
@@ -192,8 +245,9 @@ export default function DashboardShell({
               <span>{theme === "dark" ? "Mode Terang" : "Mode Gelap"}</span>
             </button>
 
-            <button
-              type="button"
+            <Link
+              href="/settings"
+              onClick={() => setSidebarOpen(false)}
               className="
                 flex items-center gap-3 px-3 py-2 rounded-lg
                 text-[var(--text-muted)]
@@ -202,8 +256,8 @@ export default function DashboardShell({
               "
             >
               <HelpCircle className="w-[20px] h-[20px] text-[var(--text-faint)]" />
-              <span>Pusat Bantuan</span>
-            </button>
+              <span>Bantuan &amp; Profil</span>
+            </Link>
 
             <div className="my-1 border-t border-[var(--border-soft)]" />
 
@@ -247,7 +301,7 @@ export default function DashboardShell({
           "
         >
           {/* Kiri: hamburger (mobile/tablet) + search */}
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
@@ -263,55 +317,148 @@ export default function DashboardShell({
               <Menu className="w-5 h-5" />
             </button>
 
-            <div className="relative w-full max-w-xl flex items-center min-w-0">
-              <Search className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px] absolute left-3 sm:left-3.5 text-[var(--text-faint)] pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Cari modul soal, ujian, topik, atau mahasiswa..."
-                className="
-                  w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5
-                  bg-[var(--bg)]
-                  border border-[var(--border)]
-                  rounded-xl
-                  text-xs sm:text-sm text-[var(--text)]
-                  placeholder:text-[var(--text-faint)]
-                  focus:outline-none focus:border-[var(--accent)]
-                  focus:ring-2 focus:ring-[var(--accent-soft)]
-                  transition-all
-                "
-              />
-            </div>
+            <GlobalSearch />
           </div>
 
-          {/* Kanan: status, profil */}
+          {/* Kanan: notifikasi, status, profil */}
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            <div
+            <button
+              type="button"
+              aria-label="Notifikasi"
+              title="Notifikasi"
               className="
-                hidden md:inline-flex items-center gap-2
-                px-3.5 py-1.5 rounded-full
-                bg-[var(--accent-soft)] border border-[var(--accent-border)]
-                text-[var(--accent-ink)]
+                hidden sm:flex items-center justify-center
+                w-9 h-9 sm:w-10 sm:h-10 rounded-xl
+                border border-[var(--border)]
+                text-[var(--text-muted)]
+                hover:text-[var(--accent-ink)] hover:bg-[var(--accent-soft)]
+                hover:border-[var(--accent-border)]
+                transition-colors relative
               "
             >
-              <span className="w-2 h-2 rounded-full bg-[var(--success)] ring-2 ring-[var(--success-soft)]" />
+              <Bell className="w-[18px] h-[18px]" />
+            </button>
+
+            <div className="hidden md:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--accent-soft)] border border-[var(--accent-border)] text-[var(--accent-ink)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--success)] ring-2 ring-[var(--success-soft)] animate-pulse" />
               <span className="text-xs font-semibold whitespace-nowrap">Sistem Aktif</span>
             </div>
 
             <div className="hidden sm:block h-8 w-px bg-[var(--border)]" />
 
-            <div className="flex items-center gap-2 sm:gap-3 pl-0 sm:pl-1">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[var(--accent-soft)] text-[var(--accent-ink)] flex items-center justify-center font-bold ring-2 ring-[var(--border-soft)] shrink-0">
-                D
-              </div>
-              <div className="hidden xl:flex flex-col text-left">
-                <span className="text-sm font-bold text-[var(--text)] leading-tight">
-                  Dosen
-                </span>
-                <span className="text-xs text-[var(--text-muted)] leading-tight mt-0.5">
-                  Portal Pengampu
-                </span>
-              </div>
-              <ChevronDown className="hidden sm:block w-[18px] h-[18px] text-[var(--text-faint)] cursor-pointer" />
+            {/* Dropdown profil */}
+            <div ref={profileMenuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setProfileMenuOpen((open) => !open)}
+                aria-haspopup="menu"
+                aria-expanded={profileMenuOpen}
+                className="
+                  flex items-center gap-2 sm:gap-3 pl-0 sm:pl-1
+                  py-1.5 pr-1 rounded-xl
+                  hover:bg-[var(--accent-soft)]
+                  transition-colors
+                "
+              >
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[var(--accent-soft)] text-[var(--accent-ink)] flex items-center justify-center font-bold text-sm ring-2 ring-[var(--border-soft)] shrink-0">
+                  {profileLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    initials
+                  )}
+                </div>
+                <div className="hidden xl:flex flex-col text-left max-w-[12rem]">
+                  <span className="text-sm font-bold text-[var(--text)] leading-tight truncate">
+                    {nama}
+                  </span>
+                  <span className="text-xs text-[var(--text-muted)] leading-tight mt-0.5 truncate">
+                    {email}
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`hidden sm:block w-[18px] h-[18px] text-[var(--text-faint)] transition-transform duration-200 ${profileMenuOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {/* Menu dropdown */}
+              {profileMenuOpen && (
+                <div
+                  role="menu"
+                  className="
+                    absolute right-0 top-full mt-2 w-64
+                    bg-[var(--bg-panel)]
+                    border border-[var(--border)]
+                    rounded-2xl
+                    shadow-xl shadow-slate-900/10
+                    overflow-hidden
+                    z-50
+                  "
+                >
+                  <div className="px-4 py-3.5 border-b border-[var(--border-soft)] bg-[var(--bg)]/40">
+                    <p className="text-sm font-bold text-[var(--text)] leading-tight truncate">
+                      {nama}
+                    </p>
+                    <p className="text-[11px] text-[var(--text-muted)] leading-tight mt-1 truncate">
+                      {email}
+                    </p>
+                    <span className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--accent-soft)] border border-[var(--accent-border)] text-[var(--accent-ink)] text-[10px] font-bold">
+                      <ShieldCheck className="w-3 h-3" />
+                      Dosen
+                    </span>
+                  </div>
+
+                  <div className="p-1.5 space-y-0.5">
+                    <ProfileMenuItem
+                      href="/settings"
+                      icon={UserRound}
+                      label="Profil &amp; Akun"
+                    />
+                    <ProfileMenuItem
+                      href="/settings"
+                      icon={Settings}
+                      label="Pengaturan"
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleTheme}
+                      className="
+                        w-full flex items-center gap-2.5 px-3 py-2 rounded-xl
+                        text-sm text-[var(--text-muted)]
+                        hover:text-[var(--text)] hover:bg-[var(--accent-soft)]
+                        transition-colors text-left
+                      "
+                    >
+                      {theme === "dark" ? (
+                        <Sun className="w-[18px] h-[18px] text-[var(--text-faint)]" />
+                      ) : (
+                        <Moon className="w-[18px] h-[18px] text-[var(--text-faint)]" />
+                      )}
+                      <span>{theme === "dark" ? "Mode Terang" : "Mode Gelap"}</span>
+                    </button>
+
+                    <div className="my-1 border-t border-[var(--border-soft)]" />
+
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      disabled={loggingOut}
+                      className="
+                        w-full flex items-center gap-2.5 px-3 py-2 rounded-xl
+                        text-sm font-semibold text-[var(--danger-text)]
+                        hover:bg-[var(--danger-soft)]
+                        transition-colors disabled:opacity-60
+                      "
+                    >
+                      {loggingOut ? (
+                        <Loader2 className="w-[18px] h-[18px] animate-spin" />
+                      ) : (
+                        <LogOut className="w-[18px] h-[18px]" />
+                      )}
+                      <span>{loggingOut ? "Keluar..." : "Keluar"}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -320,5 +467,30 @@ export default function DashboardShell({
         <main className="w-full pt-16 sm:pt-20 flex-1 relative">{children}</main>
       </div>
     </div>
+  );
+}
+
+function ProfileMenuItem({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string;
+  icon: typeof UserRound;
+  label: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="
+        flex items-center gap-2.5 px-3 py-2 rounded-xl
+        text-sm text-[var(--text-muted)]
+        hover:text-[var(--text)] hover:bg-[var(--accent-soft)]
+        transition-colors
+      "
+    >
+      <Icon className="w-[18px] h-[18px] text-[var(--text-faint)]" />
+      <span>{label}</span>
+    </Link>
   );
 }

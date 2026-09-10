@@ -26,25 +26,14 @@ export default async function DaftarSubmissionPage({
 }: {
   params: { soalId: string };
 }) {
-  const [soal, submissions, traces] = await Promise.all([
+  const [soal, submissions] = await Promise.all([
     db.soal.findUnique({ where: { id: params.soalId } }),
     db.submission.findMany({
       where: { soalId: params.soalId },
       include: { hasilKoreksi: true },
       orderBy: { createdAt: "desc" },
     }),
-    db.gradingTrace.findMany({
-      where: { submission: { soalId: params.soalId } },
-      orderBy: { createdAt: "asc" },
-      include: { submission: { select: { id: true } } },
-    }),
   ]);
-
-  const tracesBySubmission = traces.reduce<Record<string, typeof traces>>((acc, t) => {
-    acc[t.submission.id] = acc[t.submission.id] ?? [];
-    acc[t.submission.id].push(t);
-    return acc;
-  }, {});
 
   const total = submissions.length;
   const sudahDinilai = submissions.filter((s) => s.hasilKoreksi).length;
@@ -78,8 +67,8 @@ export default async function DaftarSubmissionPage({
               {soal?.judul ?? "Daftar Submission"}
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
-              Pantau jawaban mahasiswa dan hasil koreksi otomatis AI Copilot. Klik ikon
-              Drive pada baris mahasiswa untuk melihat jawabannya langsung.
+              Pantau jawaban mahasiswa dan hasil koreksi otomatis AI Copilot. Klik baris
+              mahasiswa untuk melihat jawaban, rubrik, dan melakukan review.
             </p>
           </div>
 
@@ -166,7 +155,6 @@ export default async function DaftarSubmissionPage({
                   }
                 : null,
             }))}
-            tracesBySubmission={tracesBySubmission}
             soalId={params.soalId}
           />
         )}

@@ -1,8 +1,7 @@
 import { db } from "@/lib/db";
 import Link from "next/link";
-import SoalGrid from "./soal-grid";
 import RealTimeLog from "@/components/RealTimeLog";
-import { Plus, FileStack, Users, FolderOpen, CircleCheck, FileEdit } from "lucide-react";
+import { Plus, FileStack, Users, FolderOpen, CircleCheck, FileEdit, ArrowRight } from "lucide-react";
 
 export default async function DashboardPage() {
   const soalList = await db.soal.findMany({
@@ -172,21 +171,50 @@ export default async function DashboardPage() {
           </div>
         ) : (
           /* =====================================================
-             ACTIVE MODULES
+             MODUL TERBARU — ringkasan singkat, detail di Bank Soal
           ===================================================== */
           <div className="flex flex-col gap-4">
             <div className="flex justify-between items-center">
               <h2 className="font-heading text-sm font-bold text-[var(--text)] flex items-center gap-2">
                 <FolderOpen className="w-4 h-4 text-[var(--accent)]" />
-                Modul Ujian
+                Modul Ujian Terbaru
               </h2>
 
-              <span className="text-xs text-[var(--text-faint)] font-medium">
-                {soalList.length} modul
-              </span>
+              <Link
+                href="/soal"
+                className="inline-flex items-center gap-1 text-xs font-bold text-[var(--accent-ink)] hover:text-[var(--accent-hover)] transition-colors"
+              >
+                Lihat Semua di Bank Soal
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
 
-            <SoalGrid initialSoalList={soalList} />
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-panel)] divide-y divide-[var(--border-soft)] overflow-hidden shadow-xs">
+              {soalList.slice(0, 4).map((soal) => {
+                const isDraft = !soal.submitToken?.trim();
+                return (
+                  <Link
+                    key={soal.id}
+                    href={`/output/${soal.id}/daftar-submission`}
+                    className="flex items-center gap-3 px-4 py-3.5 hover:bg-[var(--accent-soft)]/40 transition-colors group"
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full shrink-0 ${isDraft ? "bg-[var(--text-faint)]" : "bg-[var(--success)] animate-pulse"}`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-[var(--text)] truncate group-hover:text-[var(--accent-ink)] transition-colors">
+                        {soal.judul}
+                      </p>
+                      <p className="text-[11px] text-[var(--text-faint)] mt-0.5 truncate">
+                        {isDraft ? "Draft" : "Aktif"} &middot;{" "}
+                        {soal.submission?.length ?? 0} submisi
+                      </p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-[var(--text-faint)] shrink-0 group-hover:text-[var(--accent-ink)] transition-colors" />
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         )}
 

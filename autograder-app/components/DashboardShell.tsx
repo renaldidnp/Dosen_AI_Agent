@@ -27,7 +27,7 @@ import { useProfile, avatarInitials } from "./useProfile";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Beranda", icon: LayoutDashboard },
-  { href: "/soal/create", label: "Bank Soal", icon: Database },
+  { href: "/soal", label: "Bank Soal", icon: Database },
   { href: "/kelas", label: "Kelas & Mahasiswa", icon: School },
   { href: "/settings", label: "Pengaturan", icon: Settings },
 ];

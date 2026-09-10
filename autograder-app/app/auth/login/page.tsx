@@ -3,7 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail, Loader2 } from "lucide-react";
+import { Space_Grotesk } from "next/font/google";
+import { Eye, EyeOff, Lock, Mail, Loader2, GraduationCap } from "lucide-react";
+
+const display = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
+});
 
 const LANDSCAPE_Q = "[@media(max-width:900px)_and_(max-height:640px)_and_(orientation:landscape)]";
 
@@ -60,50 +67,42 @@ export default function LoginPage() {
 
   return (
     <div
-      className={`h-dvh w-full bg-[var(--bg)] relative overflow-x-hidden flex items-center justify-center px-4 py-6 sm:px-6 sm:py-10 ${LANDSCAPE_Q}:py-4 ${LANDSCAPE_Q}:items-start transition-colors duration-300`}
+      className={`${display.variable} h-dvh w-full bg-[var(--bg)] relative overflow-x-hidden flex items-center justify-center px-4 py-8 sm:px-6 sm:py-12 ${LANDSCAPE_Q}:py-4 ${LANDSCAPE_Q}:items-start font-sans transition-colors duration-300`}
     >
-      {/* Background grid */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(var(--accent) 1px, transparent 1px), linear-gradient(90deg, var(--accent) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-          opacity: "var(--grid-opacity)",
-        }}
-      />
-      {/* Radial glow */}
-      <div
-        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
-        style={{ background: "var(--glow-radial)" }}
-      />
+      {/* Subtle background accent */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div
+          className="absolute -top-24 left-1/2 -translate-x-1/2 w-[560px] h-[560px] rounded-full blur-3xl opacity-60"
+          style={{ background: "var(--accent-soft)" }}
+        />
+      </div>
 
       <div className="relative z-10 w-full max-w-[420px]">
+        <Link
+          href="/"
+          className={`flex items-center justify-center gap-2 mb-6 ${LANDSCAPE_Q}:mb-3 text-[var(--text)]`}
+        >
+          <div className="h-8 w-8 rounded-full bg-[var(--accent)] flex items-center justify-center text-[var(--accent-fg)]">
+            <GraduationCap className="h-4 w-4" />
+          </div>
+          <span className="text-[15px]" style={{ fontFamily: "var(--font-display)" }}>
+            Swa<span className="text-[var(--accent-ink)]">KoreksiIn</span>
+          </span>
+        </Link>
+
         {/* Panel */}
         <div
-          className={`relative bg-[var(--bg-panel-translucent)] backdrop-blur-xl border border-[var(--border)] rounded-[4px] p-6 sm:p-8 ${LANDSCAPE_Q}:p-5 transition-colors duration-300`}
-          style={{ boxShadow: "var(--glow-shadow)" }}
+          className={`relative bg-[var(--bg-panel)] border border-[var(--border-soft)] rounded-3xl p-6 sm:p-8 ${LANDSCAPE_Q}:p-5 shadow-xl transition-colors duration-300`}
         >
-          {/* Corner brackets */}
-          <span className="absolute top-[-1px] left-[-1px] w-3 h-3 border-t-2 border-l-2 border-[var(--accent-border-strong)]" />
-          <span className="absolute bottom-[-1px] right-[-1px] w-3 h-3 border-b-2 border-r-2 border-[var(--accent-border-strong)]" />
-
           {/* Header */}
-          <div className={`mb-7 ${LANDSCAPE_Q}:mb-4`}>
-            <div className={`font-mono text-[11px] text-[var(--accent-ink)] tracking-widest uppercase flex items-center gap-2 mb-3 ${LANDSCAPE_Q}:mb-1.5`}>
-              <span
-                className="w-1.5 h-1.5 bg-[var(--accent)] rounded-[2px]"
-                style={{ boxShadow: "0 0 8px var(--accent)" }}
-              />
-              SwaKoreksiIn
-            </div>
-            <h1 className={`font-semibold text-[26px] sm:text-[28px] text-[var(--text)] leading-tight tracking-tight ${LANDSCAPE_Q}:text-[22px]`}>
-              Masuk ke{" "}
-              <span className="text-[var(--accent-ink)]" style={{ textShadow: "0 0 10px var(--accent)" }}>
-                Dashboard_
-              </span>
+          <div className={`mb-7 ${LANDSCAPE_Q}:mb-4 text-center`}>
+            <h1
+              className={`text-[24px] sm:text-[27px] text-[var(--text)] leading-tight ${LANDSCAPE_Q}:text-[21px]`}
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Masuk ke dashboard
             </h1>
-            <p className={`text-sm text-[var(--text-muted)] mt-1.5 ${LANDSCAPE_Q}:hidden`}>
+            <p className={`text-sm text-[var(--text-muted)] mt-2 ${LANDSCAPE_Q}:hidden`}>
               Masukkan kredensial Anda untuk melanjutkan.
             </p>
           </div>
@@ -111,7 +110,7 @@ export default function LoginPage() {
           {/* Error */}
           {error && (
             <div
-              className={`mb-5 ${LANDSCAPE_Q}:mb-3 border border-[var(--danger-border)] bg-[var(--danger-soft)] text-[var(--danger-text)] text-sm rounded-[2px] px-3 py-2.5 font-mono`}
+              className={`mb-5 ${LANDSCAPE_Q}:mb-3 border border-[var(--danger-border)] bg-[var(--danger-soft)] text-[var(--danger-text)] text-sm rounded-xl px-3.5 py-2.5`}
             >
               {error}
             </div>
@@ -120,7 +119,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className={`flex flex-col gap-5 ${LANDSCAPE_Q}:gap-3`}>
             {/* Email */}
             <div className={`flex flex-col gap-1.5 ${LANDSCAPE_Q}:gap-1`}>
-              <label htmlFor="email" className="font-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest">
+              <label htmlFor="email" className="text-[13px] text-[var(--text-muted)]">
                 Email
               </label>
               <div className="relative group">
@@ -133,7 +132,7 @@ export default function LoginPage() {
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="nama@kampus.ac.id"
-                  className={`w-full bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] focus:shadow-[0_0_0_1px_var(--accent-soft)] rounded-[2px] pl-10 pr-3 py-2.5 ${LANDSCAPE_Q}:py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] outline-none transition-all`}
+                  className={`w-full bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-soft)] rounded-xl pl-10 pr-3 py-2.5 ${LANDSCAPE_Q}:py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] outline-none transition-all`}
                 />
               </div>
             </div>
@@ -141,12 +140,12 @@ export default function LoginPage() {
             {/* Password */}
             <div className={`flex flex-col gap-1.5 ${LANDSCAPE_Q}:gap-1`}>
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="font-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest">
+                <label htmlFor="password" className="text-[13px] text-[var(--text-muted)]">
                   Password
                 </label>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-[11px] text-[var(--accent-ink)] opacity-80 hover:opacity-100 transition-opacity"
+                  className="text-[12px] text-[var(--accent-ink)] opacity-80 hover:opacity-100 transition-opacity"
                 >
                   Lupa password?
                 </Link>
@@ -161,7 +160,7 @@ export default function LoginPage() {
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   placeholder="••••••••"
-                  className={`w-full bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] focus:shadow-[0_0_0_1px_var(--accent-soft)] rounded-[2px] pl-10 pr-10 py-2.5 ${LANDSCAPE_Q}:py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] outline-none transition-all`}
+                  className={`w-full bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-soft)] rounded-xl pl-10 pr-10 py-2.5 ${LANDSCAPE_Q}:py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] outline-none transition-all`}
                 />
                 <button
                   type="button"
@@ -178,10 +177,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className={`mt-2 ${LANDSCAPE_Q}:mt-1 inline-flex items-center justify-center gap-2 bg-[var(--accent-soft)] border border-[var(--accent)] text-[var(--accent-ink)] font-mono text-xs px-4 py-2.5 ${LANDSCAPE_Q}:py-2 rounded-[2px] uppercase tracking-wider hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{ boxShadow: "0 0 0 rgba(0,0,0,0)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 0 10px var(--accent-border)")}
-              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 0 0 rgba(0,0,0,0)")}
+              className={`mt-2 ${LANDSCAPE_Q}:mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] text-[var(--accent-fg)] text-sm font-medium px-4 py-3 ${LANDSCAPE_Q}:py-2 hover:bg-[var(--accent-hover)] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm`}
             >
               {loading ? (
                 <>
@@ -189,16 +185,16 @@ export default function LoginPage() {
                   Memproses...
                 </>
               ) : (
-                "LOGIN"
+                "Masuk"
               )}
             </button>
           </form>
 
           {/* Divider */}
           <div className={`flex items-center gap-3 my-5 ${LANDSCAPE_Q}:my-3`}>
-            <div className="h-px flex-1 bg-[var(--border)]" />
-            <span className="font-mono text-[10px] text-[var(--text-faint)] uppercase tracking-widest">atau</span>
-            <div className="h-px flex-1 bg-[var(--border)]" />
+            <div className="h-px flex-1 bg-[var(--border-soft)]" />
+            <span className="text-[12px] text-[var(--text-faint)]">atau</span>
+            <div className="h-px flex-1 bg-[var(--border-soft)]" />
           </div>
 
           {/* Google */}
@@ -206,7 +202,7 @@ export default function LoginPage() {
             type="button"
             onClick={handleGoogleLogin}
             disabled={googleLoading}
-            className={`w-full inline-flex items-center justify-center gap-2.5 bg-[var(--border-soft)] border border-[var(--border)] text-[var(--text)] font-mono text-xs px-4 py-2.5 ${LANDSCAPE_Q}:py-2 rounded-[2px] uppercase tracking-wider hover:bg-[var(--border)] hover:border-[var(--border-strong)] transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`w-full inline-flex items-center justify-center gap-2.5 rounded-full border border-[var(--border)] text-[var(--text)] text-sm px-4 py-3 ${LANDSCAPE_Q}:py-2 hover:border-[var(--border-strong)] hover:bg-[var(--border-soft)] transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {googleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleIcon />}
             Masuk dengan Google

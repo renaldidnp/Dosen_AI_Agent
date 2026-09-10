@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import Link from "next/link";
 import {
   ArrowLeft,
+  ClipboardCheck,
   FileQuestion,
   FileText,
   GraduationCap,
@@ -17,6 +18,7 @@ type IndikatorSkor = {
     skor: number;
     catatan: string;
     review?: { keputusan: "setuju" | "koreksi"; skorAwal: number; skorAkhir: number; alasan: string } | null;
+    saran?: string | null;
 };
 
 export default async function DaftarSubmissionPage({
@@ -46,6 +48,9 @@ export default async function DaftarSubmissionPage({
 
   const total = submissions.length;
   const sudahDinilai = submissions.filter((s) => s.hasilKoreksi).length;
+  const menungguReview = submissions.filter(
+    (s) => s.hasilKoreksi?.status === "menunggu_review" || s.hasilKoreksi?.status === "dikirim_ulang",
+  ).length;
   const belumDinilai = total - sudahDinilai;
 
   const skorList = submissions
@@ -97,15 +102,21 @@ export default async function DaftarSubmissionPage({
         {/* =========================================================
             KPI RIBBON
         ========================================================= */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-8">
           <KpiCard label="Total Submisi" value={total} icon={Users} />
           <KpiCard
-            label="Sudah Dinilai"
+            label="Menunggu Review"
+            value={menungguReview}
+            icon={ClipboardCheck}
+            tone="warning"
+          />
+          <KpiCard
+            label="Sudah Dinilai AI"
             value={sudahDinilai}
             icon={GraduationCap}
             tone="success"
           />
-          <KpiCard label="Belum Dinilai" value={belumDinilai} icon={FileText} tone="warning" />
+          <KpiCard label="Belum Dinilai" value={belumDinilai} icon={FileText} />
           <KpiCard label="Rata-rata Skor" value={rataRata} icon={TrendingUp} />
         </section>
 
@@ -150,11 +161,13 @@ export default async function DaftarSubmissionPage({
                     feedback: s.hasilKoreksi.feedback,
                     direviewOleh: s.hasilKoreksi.direviewOleh,
                     reviewAktif: s.hasilKoreksi.reviewAktif,
+                    status: s.hasilKoreksi.status,
                     skorPerIndikator: s.hasilKoreksi.skorPerIndikator as unknown as IndikatorSkor[] | undefined,
                   }
                 : null,
             }))}
             tracesBySubmission={tracesBySubmission}
+            soalId={params.soalId}
           />
         )}
       </div>

@@ -11,6 +11,7 @@ import {
   Send,
   Mail,
   AlertTriangle,
+  ClipboardCheck,
 } from "lucide-react";
 
 type TraceRow = {
@@ -76,6 +77,7 @@ type HasilKoreksi = {
     feedback: string;
     direviewOleh?: string | null;
     reviewAktif?: boolean;
+    status?: string;
     skorPerIndikator?: IndikatorSkor[];
 } | null;
 
@@ -107,6 +109,33 @@ const STATUS_STYLE: Record<string, { label: string; className: string }> = {
         label: "Ditolak",
         className: "bg-[var(--danger-soft)] text-[var(--danger-text)] border-[var(--danger-border)]",
     },
+    gagal: {
+        label: "Gagal",
+        className: "bg-[var(--danger-soft)] text-[var(--danger-text)] border-[var(--danger-border)]",
+    },
+    selesai: {
+        label: "Dinilai",
+        className: "bg-[var(--success-soft)] text-[var(--success-ink)] border-[var(--success-border)]",
+    },
+};
+
+const REVIEW_STYLE: Record<string, { label: string; className: string }> = {
+    menunggu_review: {
+        label: "Menunggu Review",
+        className: "bg-[var(--warning-soft)] text-[var(--warning-ink)] border-[var(--warning-border)] animate-pulse",
+    },
+    approved: {
+        label: "Disetujui Dosen",
+        className: "bg-[var(--success-soft)] text-[var(--success-ink)] border-[var(--success-border)]",
+    },
+    dikoreksi: {
+        label: "Dikoreksi Dosen",
+        className: "bg-[var(--accent-soft)] text-[var(--accent-ink)] border-[var(--accent-border)]",
+    },
+    dikirim_ulang: {
+        label: "Dikirim Ulang",
+        className: "bg-[var(--warning-soft)] text-[var(--warning-ink)] border-[var(--warning-border)] animate-pulse",
+    },
 };
 
 function statusStyle(status: string) {
@@ -125,9 +154,11 @@ function drivePreviewUrl(driveFileId: string) {
 export default function SubmissionList({
   submissions,
   tracesBySubmission,
+  soalId,
 }: {
   submissions: SubmissionRow[];
   tracesBySubmission?: Record<string, TraceRow[]>;
+  soalId: string;
 }) {
     const [activeId, setActiveId] = useState<string | null>(null);
     const active = submissions.find((s) => s.id === activeId) ?? null;
@@ -150,6 +181,9 @@ export default function SubmissionList({
             <div className="flex flex-col gap-3">
                 {submissions.map((s) => {
                     const style = statusStyle(s.status);
+                    const reviewStatus = s.hasilKoreksi?.status ?? null;
+                    const reviewStyle = reviewStatus ? REVIEW_STYLE[reviewStatus] ?? null : null;
+                    const needsReview = reviewStatus === "menunggu_review";
 
                     return (
                         <div
@@ -183,6 +217,14 @@ export default function SubmissionList({
                                     >
                                         {style.label}
                                     </span>
+                                    {reviewStyle && (
+                                        <span
+                                            key={reviewStatus}
+                                            className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold ${reviewStyle.className}`}
+                                        >
+                                            {reviewStyle.label}
+                                        </span>
+                                    )}
                                 </div>
                                 <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">
                                     {s.nim} &middot; {s.emailMahasiswa}
@@ -197,6 +239,23 @@ export default function SubmissionList({
                                     {s.hasilKoreksi?.skorTotal ?? "-"}
                                 </span>
                             </div>
+
+                            {needsReview && (
+                                <a
+                                    href={`/output/${soalId}/review/${s.id}`}
+                                    title="Setujui, koreksi, atau minta AI mengoreksi ulang"
+                                    className="
+                      shrink-0 inline-flex items-center gap-1.5 h-11 px-3 rounded-xl
+                      bg-[var(--warning-soft)] border border-[var(--warning-border)]
+                      text-[var(--warning-ink)] text-xs font-bold
+                      hover:bg-[var(--warning)] hover:text-white
+                      transition-all
+                    "
+                                >
+                                    <ClipboardCheck className="w-4 h-4" />
+                                    <span className="hidden md:inline">Review</span>
+                                </a>
+                            )}
 
                             <button
                                 onClick={() => setActiveId(s.id)}

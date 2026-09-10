@@ -32,6 +32,23 @@ export default async function NilaiPage({ params, searchParams }: { params: { su
     );
   }
 
+  const belumDisetujui = !["approved", "dikoreksi"].includes(submission.hasilKoreksi.status);
+
+  if (belumDisetujui) {
+    return (
+      <div className="max-w-2xl mx-auto p-6">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-center">
+          <p className="text-amber-800 font-medium">
+            Jawaban kamu untuk <b>{submission.soal.judul}</b> sudah selesai dikoreksi.
+          </p>
+          <p className="text-amber-700 text-sm mt-2">
+            Namun hasilnya masih dalam proses verifikasi dosen. Mohon cek kembali dalam beberapa saat.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const { skorTotal, skorPerIndikator, feedback } = submission.hasilKoreksi;
   const breakdown = skorPerIndikator as unknown as SkorIndikator[];
   const indikatorMap = new Map(submission.soal.indikator.map((i) => [i.id, i]));

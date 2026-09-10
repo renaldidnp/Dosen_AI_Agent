@@ -20,8 +20,11 @@ import {
 // 1. MODUL PENILAIAN JAWABAN MAHASISWA (PASS 1)
 // ==========================================
 
-function buildGradePrompt(jawabanText: string, rubric: RubrikIndikator[]): { system: string; prompt: string } {
+function buildGradePrompt(jawabanText: string, rubric: RubrikIndikator[], catatanTambahan?: string): { system: string; prompt: string } {
   const rubrikText = rubric.map((r) => `- indikatorId: "${r.indikatorId}", nama: "${r.nama}", bobot: ${r.bobot}%, skorMax: ${r.skorMax}\n  Kriteria: ${r.rubrik}`).join("\n");
+  const catatanBlock = catatanTambahan && catatanTambahan.trim()
+    ? `\nCATATAN DOSEN (wajib diperhatikan saat menilai):\n${catatanTambahan.trim()}\n`
+    : "";
 
   return {
     system: "Kamu adalah Agent Penilai yang menilai jawaban mahasiswa secara objektif berdasarkan rubrik penilaian. Balas HANYA dengan JSON valid, tanpa teks lain, tanpa markdown code block.",
@@ -32,7 +35,7 @@ ${jawabanText}
 
 RUBRIK PENILAIAN:
 ${rubrikText}
-
+${catatanBlock}
 Nilai jawaban mahasiswa di atas untuk SETIAP indikator pada rubrik. Berikan skor (angka, maksimal sesuai skorMax masing-masing indikator) dan feedback singkat per indikator.
 
 PENTING: Balas HANYA dengan JSON valid, tanpa teks lain, tanpa markdown code block, dengan format persis seperti ini:
@@ -45,8 +48,8 @@ PENTING: Balas HANYA dengan JSON valid, tanpa teks lain, tanpa markdown code blo
   };
 }
 
-export async function gradeAnswer(jawabanText: string, rubric: RubrikIndikator[]): Promise<{ hasilIndikator: HasilIndikatorRaw[]; feedbackUmum: string; provider: string; model: string }> {
-  const { system, prompt } = buildGradePrompt(jawabanText, rubric);
+export async function gradeAnswer(jawabanText: string, rubric: RubrikIndikator[], catatanTambahan?: string): Promise<{ hasilIndikator: HasilIndikatorRaw[]; feedbackUmum: string; provider: string; model: string }> {
+  const { system, prompt } = buildGradePrompt(jawabanText, rubric, catatanTambahan);
 
   const { text, provider, model } = await llmClient.generateJsonDetailed({ prompt, system, temperature: 0.2 });
 
@@ -66,10 +69,14 @@ export async function gradeAnswer(jawabanText: string, rubric: RubrikIndikator[]
 function buildReviewPrompt(
   jawabanText: string,
   rubric: RubrikIndikator[],
-  hasilPenilai: HasilIndikatorRaw[]
+  hasilPenilai: HasilIndikatorRaw[],
+  catatanTambahan?: string
 ): { system: string; prompt: string } {
   const rubrikText = rubric.map((r) => `- indikatorId: "${r.indikatorId}", nama: "${r.nama}", bobot: ${r.bobot}%, skorMax: ${r.skorMax}\n  Kriteria: ${r.rubrik}`).join("\n");
   const hasilText = hasilPenilai.map((h) => `- ${h.indikatorId}: skor ${h.skor}, feedback: ${h.feedback}`).join("\n");
+  const catatanBlock = catatanTambahan && catatanTambahan.trim()
+    ? `\nCATATAN DOSEN (perhatikan saat memverifikasi):\n${catatanTambahan.trim()}\n`
+    : "";
 
   return {
     system: "Kamu adalah Agent Peninjau yang berpikir kritis untuk memverifikasi penilaian yang dibuat Agent Penilai. Periksa ulang jawaban mahasiswa terhadap rubrik, lalu putuskan apakah skor Agent Penilai sudah tepat. Balas HANYA dengan JSON valid, tanpa teks lain, tanpa markdown code block.",
@@ -81,6 +88,7 @@ ${jawabanText}
 RUBRIK PENILAIAN:
 ${rubrikText}
 
+${catatanBlock}
 HASIL AGENT PENILAI (pass 1):
 ${hasilText}
 
@@ -104,9 +112,10 @@ PENTING: Balas HANYA dengan JSON valid, tanpa teks lain, tanpa markdown code blo
 export async function reviewAnswer(
   jawabanText: string,
   rubric: RubrikIndikator[],
-  hasilPenilai: HasilIndikatorRaw[]
+  hasilPenilai: HasilIndikatorRaw[],
+  catatanTambahan?: string
 ): Promise<ReviewResult & { provider: string; model: string }> {
-  const { system, prompt } = buildReviewPrompt(jawabanText, rubric, hasilPenilai);
+  const { system, prompt } = buildReviewPrompt(jawabanText, rubric, hasilPenilai, catatanTambahan);
 
   const { text, provider, model } = await llmClient.generateJsonDetailed({ prompt, system, temperature: 0.1 });
 

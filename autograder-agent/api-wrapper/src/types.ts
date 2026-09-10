@@ -10,6 +10,7 @@ export type GradeRequest = {
   submission_id: string;
   file_id: string;
   rubric: RubrikIndikator[];
+  catatan_tambahan?: string;
 };
 
 export type HasilIndikatorRaw = {

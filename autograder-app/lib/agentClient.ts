@@ -8,6 +8,7 @@ type GradeRequest = {
     rubrik: string;
     skorMax: number;
   }[];
+  catatan_tambahan?: string;
 };
 
 type GradeResponse = {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { sendHasilPenilaianEmail } from "@/lib/mailer";
 
 export async function POST(req: NextRequest) {
   const secret = req.headers.get("x-agent-callback-secret");
@@ -71,6 +70,7 @@ export async function POST(req: NextRequest) {
         feedback,
         direviewOleh: typeof direview_oleh === "string" ? direview_oleh : null,
         reviewAktif: typeof review_aktif === "boolean" ? review_aktif : true,
+        status: "menunggu_review",
       },
       create: {
         submissionId: submission_id,
@@ -79,6 +79,7 @@ export async function POST(req: NextRequest) {
         feedback,
         direviewOleh: typeof direview_oleh === "string" ? direview_oleh : null,
         reviewAktif: typeof review_aktif === "boolean" ? review_aktif : true,
+        status: "menunggu_review",
       },
     });
 
@@ -97,47 +98,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Gagal menyimpan hasil koreksi ke database" }, { status: 500 });
   }
 
-  let emailTerkirim = false;
-  try {
-    const link = `${process.env.APP_URL}/nilai/${submission_id}?token=${submission.accessToken}`;
-
-    const saranPerIndikator = Array.isArray(skor_per_indikator)
-      ? (skor_per_indikator as any[])
-          .filter((i) => i && typeof i.saran === "string" && i.saran.trim())
-          .map((i) => ({ nama: String(i.nama ?? "Indikator"), saran: i.saran }))
-      : [];
-
-    await sendHasilPenilaianEmail({
-      to: submission.emailMahasiswa,
-      namaMahasiswa: submission.namaMahasiswa,
-      judulSoal: submission.soal.judul,
-      skorTotal: skor_total,
-      feedback,
-      link,
-      direviewOleh,
-      saranPerIndikator,
-    });
-    emailTerkirim = true;
-  } catch (err) {
-    console.error(`Gagal mengirim email hasil penilaian untuk submission ${submission_id}:`, err);
-  }
-
-  await db.hasilKoreksi.update({
-    where: { submissionId: submission_id },
-    data: { emailTerkirim },
-  });
-
-  await db.gradingTrace.create({
-    data: {
-      submissionId: submission_id,
-      step: "mail",
-      status: emailTerkirim ? "done" : "error",
-      detail: emailTerkirim ? "Email hasil penilaian terkirim" : "Email hasil penilaian gagal terkirim",
-    },
-  });
-
   return NextResponse.json({
-    message: emailTerkirim ? "Hasil koreksi tersimpan & email terkirim" : "Hasil koreksi tersimpan, tapi email gagal terkirim",
-    emailTerkirim,
+    message: "Hasil koreksi tersimpan, menunggu review dosen",
+    status: "menunggu_review",
   });
 }

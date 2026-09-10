@@ -124,6 +124,7 @@ model HasilKoreksi {
   feedback        String   @db.Text
   direviewOleh    String?
   reviewAktif     Boolean  @default(true)
+  status          String   @default("menunggu_review") // menunggu_review | approved | dikoreksi | dikirim_ulang
 
   emailTerkirim   Boolean  @default(false)
   createdAt       DateTime @default(now())

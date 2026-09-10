@@ -19,7 +19,7 @@ async function processGrading(payload: GradeRequest): Promise<void> {
     // ── PASS 1: Agent Penilai ──
     const tPass1 = Date.now();
     await trace("pass1", "running", { detail: "Agent Penilai menskor jawaban per rubrik" });
-    const { hasilIndikator, feedbackUmum, provider: p1, model: m1 } = await gradeAnswer(jawabanText, payload.rubric);
+    const { hasilIndikator, feedbackUmum, provider: p1, model: m1 } = await gradeAnswer(jawabanText, payload.rubric, payload.catatan_tambahan);
     await trace("pass1", "done", { detail: "Selesai menskor seluruh indikator", provider: p1, model: m1, durationMs: Date.now() - tPass1 });
 
     // Validasi: pastikan setiap indikator rubric punya hasil dengan skor numerik valid.
@@ -43,7 +43,7 @@ async function processGrading(payload: GradeRequest): Promise<void> {
     try {
       const tPass2 = Date.now();
       await trace("pass2", "running", { detail: "Agent Peninjau memverifikasi hasil Penilai" });
-      const review = await reviewAnswer(jawabanText, payload.rubric, hasilIndikator);
+      const review = await reviewAnswer(jawabanText, payload.rubric, hasilIndikator, payload.catatan_tambahan);
       await trace("pass2", "done", { detail: "Verifikasi selesai", provider: review.provider, model: review.model, durationMs: Date.now() - tPass2 });
       reviewAktif = true;
       direviewOleh = `Agent Peninjau (${review.provider}/${review.model})`;

@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, signToken } from "@/lib/auth";
+import { sessionCookieOptions } from "@/lib/cookies";
 
 export async function POST(req: Request) {
     try {
@@ -23,13 +24,11 @@ export async function POST(req: Request) {
         const token = await signToken({ id: dosen.id, email: dosen.email, nama: dosen.nama });
 
         const res = NextResponse.json({ message: "Login berhasil." }, { status: 200 });
-        res.cookies.set("session_token", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            path: "/",
-            maxAge: 60 * 60 * 24 * 7, // 7 hari
-        });
+        res.cookies.set(
+            "session_token",
+            token,
+            sessionCookieOptions(req as NextRequest, 60 * 60 * 24 * 7), // 7 hari
+        );
 
         return res;
     } catch (err) {

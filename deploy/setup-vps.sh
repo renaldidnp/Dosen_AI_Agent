@@ -32,17 +32,37 @@ fi
 # ------------------------------------------------------------
 # 1. Sistem update + install dependensi
 # ------------------------------------------------------------
-info "Mengupdate sistem & menginstall Docker, Compose, Nginx..."
+info "Mengupdate sistem & menginstall Docker, Nginx..."
 apt-get update -y
-apt-get install -y docker.io docker-compose-plugin nginx git
+apt-get install -y docker.io nginx git
 systemctl enable --now docker
 systemctl enable --now nginx
+
+# Compose plugin resmi Docker tidak ada di repo Ubuntu → pasang binary secara manual
+if ! docker compose version >/dev/null 2>&1; then
+  info "Menginstall Docker Compose plugin (binary)..."
+  latest="$(curl -fsSL https://api.github.com/repos/docker/compose/releases/latest | grep -oP '"tag_name":\s*"v\K[0-9.]+' | head -1)"
+  [ -z "$latest" ] && latest="2.32.4"
+  mkdir -p /usr/local/lib/docker/cli-plugins
+  curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-compose \
+    "https://github.com/docker/compose/releases/download/v${latest}/docker-compose-linux-x86_64"
+  chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+  ok "Docker Compose v${latest} terinstall"
+fi
+
 ok "Docker $(docker --version) | Compose $(docker compose version)"
 
 # ------------------------------------------------------------
 # 2. Ambil kode aplikasi
 # ------------------------------------------------------------
-if [ -d "$APP_DIR/.git" ]; then
+if [ -d "$APP_DIR" ] && [ -f "$APP_DIR/docker-compose.yml" ]; then
+  info "Kode sudah ada di $APP_DIR — memakainya langsung."
+  cd "$APP_DIR"
+  if [ -d "$APP_DIR/.git" ]; then
+    info "Menjalankan git pull untuk update terbaru..."
+    git pull --ff-only || true
+  fi
+elif [ -d "$APP_DIR/.git" ]; then
   info "Repositori sudah ada di $APP_DIR — menjalankan git pull..."
   cd "$APP_DIR"
   git pull --ff-only
@@ -123,13 +143,15 @@ EOF
 fi
 
 # ------------------------------------------------------------
-# 5. Verifikasi MYSQL_PASSWORD konsisten dengan .env app
+# 5. Simpan MYSQL_ROOT_PASSWORD agar docker compose membacanya
 # ------------------------------------------------------------
-if ! grep -q "MYSQL_ROOT_PASSWORD" "$APP_DIR/docker-compose.yml" 2>/dev/null; then
+if [ ! -f "$APP_DIR/.env" ]; then
   cat > "$APP_DIR/.env" <<EOF
 MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD}
 EOF
   ok "Menyimpan MYSQL_ROOT_PASSWORD ke $APP_DIR/.env (dibaca docker compose)"
+else
+  warn "$APP_DIR/.env sudah ada — biarkan kerasan. Pastikan MYSQL_ROOT_PASSWORD-nya sama dengan di autograder-app/.env."
 fi
 
 # ------------------------------------------------------------

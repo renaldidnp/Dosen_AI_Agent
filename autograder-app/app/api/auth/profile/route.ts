@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken, hashPassword, verifyPassword } from "@/lib/auth";
+import { sessionCookieOptions } from "@/lib/cookies";
 
 function getTokenFromCookie(req: Request): string | null {
   const cookieHeader = req.headers.get("cookie") || "";
@@ -71,13 +72,11 @@ export async function PATCH(req: Request) {
     const newToken = await signToken({ id: updated.id, email: updated.email, nama: updated.nama });
 
     const res = NextResponse.json({ message: "Profil berhasil diperbarui.", data: updated });
-    res.cookies.set("session_token", newToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    res.cookies.set(
+      "session_token",
+      newToken,
+      sessionCookieOptions(req as NextRequest, 60 * 60 * 24 * 7),
+    );
 
     return res;
   } catch (err) {

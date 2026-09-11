@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 
-const AGENT_URL = process.env.AUTOGRADER_AGENT_URL ?? "http://localhost:4000";
+// AGENT_API_URL adalah nama env canonical (dipakai juga di lib/agentClient.ts).
+// AUTOGRADER_AGENT_URL dipertahankan sebagai fallback untuk legacy.
+const AGENT_URL =
+  process.env.AGENT_API_URL ?? process.env.AUTOGRADER_AGENT_URL ?? "http://localhost:4000";
 const AGENT_SECRET = process.env.AGENT_SECRET;
 
 export async function POST(req: NextRequest) {

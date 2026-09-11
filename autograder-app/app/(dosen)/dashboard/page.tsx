@@ -3,6 +3,8 @@ import Link from "next/link";
 import RealTimeLog from "@/components/RealTimeLog";
 import { Plus, FileStack, Users, FolderOpen, CircleCheck, FileEdit, ArrowRight } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const soalList = await db.soal.findMany({
     include: { submission: true },

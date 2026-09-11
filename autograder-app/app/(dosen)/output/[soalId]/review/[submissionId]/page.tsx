@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ArrowLeft, ClipboardCheck, Sparkles } from "lucide-react";
 import ReviewClient from "./ReviewClient";
 
+export const dynamic = "force-dynamic";
+
 type IndikatorSkor = {
   indikatorId: string;
   nama: string;

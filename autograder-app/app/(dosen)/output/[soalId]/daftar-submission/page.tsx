@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import SubmissionList from "./SubmissionList";
 
+export const dynamic = "force-dynamic";
+
 type IndikatorSkor = {
     indikatorId: string;
     nama: string;

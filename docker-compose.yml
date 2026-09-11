@@ -1,0 +1,46 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: swakoreksiin-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-swakoreksiin_root_2024}
+      MYSQL_DATABASE: autograder
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: ./autograder-app
+      dockerfile: Dockerfile
+    container_name: swakoreksiin-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./autograder-app/.env
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  agent:
+    build:
+      context: ./autograder-agent/api-wrapper
+      dockerfile: Dockerfile
+    container_name: swakoreksiin-agent
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./autograder-agent/api-wrapper/.env
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

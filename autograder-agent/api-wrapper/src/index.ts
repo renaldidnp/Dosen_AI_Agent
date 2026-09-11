@@ -1,13 +1,13 @@
 import "dotenv/config";
 import express from "express";
 import gradeRouter from "./routes/grade";
-import generateSoalRouter from "./routes/generateSoal"; // ← tambahan
+import generateSoalRouter from "./routes/generateSoal";
 import { llmClient } from "./services/llm/client";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(express.json());
+app.use(express.json({ limit: "15mb" }));
 
 // ← tambahan: proteksi sederhana pakai shared secret, samakan pola dengan callbackService.ts
 app.use((req, res, next) => {
@@ -20,7 +20,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/", gradeRouter);
-app.use("/", generateSoalRouter); // ← tambahan
+app.use("/", generateSoalRouter);
 
 app.get("/", (_req, res) => {
   res.json({ status: "ok", service: "autograder-agent" });

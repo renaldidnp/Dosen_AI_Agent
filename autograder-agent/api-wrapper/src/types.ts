@@ -77,6 +77,15 @@ export type ChatHistoryItem = {
 export type GenerateSoalRequest = {
   prompt: string;
   history: ChatHistoryItem[];
+  // PDF materi yang diunggah dosen (base64) — hanya dipakai di request ini,
+  // TIDAK disimpan di mana pun.
+  materi?: {
+    filename: string;
+    contentBase64: string;
+  };
+  // Diisi controller hasil parse PDF pada request yang berjalan
+  materiFilename?: string;
+  materiText?: string;
 };
 
 export type IndikatorDraft = {

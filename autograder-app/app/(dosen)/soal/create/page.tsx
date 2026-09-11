@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ArrowLeft, Bot, Loader2, Plus, Send, Sparkles, Trash2, User, Wand2, X } from "lucide-react";
+import { ArrowLeft, Bot, FileText, Loader2, Paperclip, Plus, Send, Sparkles, Trash2, User, Wand2, X } from "lucide-react";
 import { uid } from "@/lib/uid";
 
 type IndikatorInput = { nama: string; bobot: number; rubrik: string; skorMax: number };
@@ -13,6 +13,17 @@ type ChatMessage = { id: string; role: ChatRole; content: string; draft?: SoalDr
 type Kelas = { id: string; nama: string; angkatan: string };
 
 const emptyIndikator = (): IndikatorInput => ({ nama: "", bobot: 0, rubrik: "", skorMax: 100 });
+
+// Konversi byte → base64 ber-chunk. Spread satu kali (`...new Uint8Array`) bisa
+// melempar "Maximum call stack size exceeded" untuk PDF > ~100KB.
+function toBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunk = 0x8000; // 32 KB per iterasi, aman untuk file sampai puluhan MB
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
 
 export default function CreateSoalPage() {
   const router = useRouter();
@@ -34,11 +45,16 @@ export default function CreateSoalPage() {
       id: "welcome",
       role: "assistant",
       content:
-        "Halo! Ceritakan topik, mata kuliah, dan tingkat kesulitan soal yang Anda inginkan. Saya akan susun draf judul, deskripsi, dan indikator penilaiannya.",
+        "Halo! Upload dulu file PDF materi kuliah di atas agar soal yang saya buat benar-benar mendalam dan tidak keluar dari materi tersebut. Kalau tanpa materi, saya tetap bisa menyusun soal berdasarkan topik yang Anda ceritakan - sebutkan topik, mata kuliah, dan tingkat kesulitannya.",
     },
   ]);
   const [chatInput, setChatInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [materiFile, setMateriFile] = useState<File | null>(null);
+  const [materiFilename, setMateriFilename] = useState("");
+  const [materiError, setMateriError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadKelas() {
@@ -111,23 +127,38 @@ async function handleSubmit() {
     setIsThinking(true);
 
     try {
+      // Jika ada materi, baca file → base64 dulu (stateless: hanya hidup untuk request ini)
+      let materiPayload: { filename: string; contentBase64: string } | null = null;
+
+      if (materiFile) {
+        const arrayBuf = await materiFile.arrayBuffer();
+        const contentBase64 = toBase64(new Uint8Array(arrayBuf));
+        materiPayload = { filename: materiFilename, contentBase64 };
+      }
+
       const res = await fetch("/api/ai-agent/generate-soal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt,
           history: messages.map(({ role, content }) => ({ role, content })),
+          materi: materiPayload,
         }),
       });
 
       const data = await res.json();
-      const assistantMsg: ChatMessage = {
-        id: uid(),
-        role: "assistant",
-        content: data.reply ?? "Berikut draf soal yang saya susun berdasarkan permintaan Anda.",
-        draft: data.draft,
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
+      const reply = data.reply ?? "Berikut draf soal yang saya susun berdasarkan permintaan Anda.";
+
+      // Jika draft berhasil dibuat → auto-clear materi dari memori browser
+      if (data.draft) {
+        setMateriFile(null);
+        setMateriFilename("");
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        { id: uid(), role: "assistant", content: reply, draft: data.draft },
+      ]);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -140,6 +171,27 @@ async function handleSubmit() {
     } finally {
       setIsThinking(false);
     }
+  }
+
+  function handleSelectMateri(file: File) {
+    setMateriError(null);
+    if (!file.name.toLowerCase().endsWith(".pdf")) {
+      setMateriError("Hanya file PDF yang didukung.");
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      setMateriError("Ukuran file maksimal 15 MB.");
+      return;
+    }
+    setMateriFile(file);
+    setMateriFilename(file.name);
+  }
+
+  function removeMateri() {
+    setMateriFile(null);
+    setMateriFilename("");
+    setMateriError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function applyDraft(draft: SoalDraft) {
@@ -448,11 +500,60 @@ async function handleSubmit() {
               </div>
 
               <div className="border-t border-[var(--border-soft)] p-3 shrink-0">
-                <div className="flex items-end gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2 transition-all focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-soft)]">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/pdf,image/pdf,.pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleSelectMateri(file);
+                  }}
+                />
+
+                {materiFile && (
+                  <div className="mb-2 flex items-center gap-2 rounded-lg border border-[var(--success-border)] bg-[var(--success-soft)] px-2.5 py-1.5">
+                    <FileText className="h-3.5 w-3.5 shrink-0 text-[var(--success-ink)]" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[11px] font-bold text-[var(--text)]">{materiFilename}</p>
+                      <p className="text-[10px] text-[var(--text-muted)]">
+                        {(materiFile.size / 1024).toFixed(1)} KB — acuan soal (otomatis terhapus setelah draft dibuat)
+                      </p>
+                    </div>
+                    <button
+                      onClick={removeMateri}
+                      className="shrink-0 rounded-md p-1 text-[var(--text-faint)] transition hover:bg-[var(--danger-soft)] hover:text-[var(--danger-text)]"
+                      aria-label="Hapus materi"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {materiError && (
+                  <p className="mb-1.5 text-[11px] font-semibold text-[var(--danger-text)]">{materiError}</p>
+                )}
+
+                <div className="flex items-end gap-1 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-1.5 transition-all focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-soft)]">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
+                      materiFile
+                        ? "text-[var(--success-ink)] hover:bg-[var(--success-soft)]"
+                        : "text-[var(--text-faint)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-ink)]"
+                    }`}
+                    title={materiFile ? `Materi terpasang: ${materiFilename} (klik untuk ganti)` : "Upload materi PDF sebagai acuan soal"}
+                    aria-label="Upload materi PDF"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                    {materiFile && (
+                      <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[var(--success)] ring-2 ring-[var(--bg-panel)]" />
+                    )}
+                  </button>
                   <textarea
                     rows={1}
                     className="max-h-32 flex-1 resize-none bg-transparent px-2 py-1.5 text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] outline-none"
-                    placeholder="Tulis topik soal yang diinginkan..."
+                    placeholder={materiFile ? "Materi terpasang — minta soal dari materi ini..." : "Tulis topik soal yang diinginkan..."}
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -465,7 +566,7 @@ async function handleSubmit() {
                   <button
                     onClick={handleSendChat}
                     disabled={!chatInput.trim() || isThinking}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--accent)] text-[var(--accent-fg)] transition hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:bg-[var(--border-soft)] disabled:text-[var(--text-faint)]"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)] text-[var(--accent-fg)] transition hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:bg-[var(--border-soft)] disabled:text-[var(--text-faint)]"
                     aria-label="Kirim"
                   >
                     <Send className="h-4 w-4" />

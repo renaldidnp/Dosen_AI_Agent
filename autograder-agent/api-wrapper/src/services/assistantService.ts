@@ -168,14 +168,49 @@ function formatHistory(history: ChatHistoryItem[]): string {
   return history.map((h) => `${h.role === "user" ? "Dosen" : "Asisten"}: ${h.content}`).join("\n");
 }
 
-export async function generateSoalDraft(payload: GenerateSoalRequest): Promise<{ reply: string; draft: SoalDraftResult }> {
-  const system = `Anda adalah asisten dosen untuk menyusun soal ujian/tugas beserta indikator penilaiannya.
+/**
+ * Batasan arahan dosen:
+ * 1. AI boleh "mencari secara luas" — memakai pengetahuan umumnya agar soal
+ *    lebih kaya dan kontekstual, selama masih sejalan dengan topik.
+ * 2. Kalau dosen mengunggah materi (PDF), AI WAJIB berpijak pada materi itu:
+ *    soal HANYA dari materi tersebut (tidak keluar ke materi lain) dan dibuat
+ *    MENDALAM (aplikasi, analisis, evaluasi), bukan sekadar hafalan.
+ */
+function buildSoalSystem(materiText?: string, materiFilename?: string): string {
+  const hasMateri = materiText && materiText.trim().length > 0;
+
+  const base = `Anda adalah asisten dosen untuk menyusun soal ujian/tugas beserta indikator penilaiannya.
 Total bobot semua indikator HARUS berjumlah tepat 100.
 skorMax default 100 kecuali dosen minta lain.
 Balas HANYA sesuai schema JSON yang diberikan, dalam Bahasa Indonesia.
 
 Schema JSON yang HARUS diikuti persis:
 ${JSON.stringify(soalSchema)}`;
+
+  if (!hasMateri) {
+    return `${base}
+
+CATATAN BATASAN:
+- Anda boleh mencari secara luas dan menggali lebih dalam dari pengetahuan umum Anda, tetapi tetap BERADA DALAM TOPIK yang dosen sebutkan di percakapan.
+- Jangan membuat soal di luar topik yang dosen minta, meskipun konteks percakapan memungkinkan Anda untuk melenceng.`;
+  }
+
+  return `${base}
+
+MATERI KULIAH (SUMBER UTAMA — file "${materiFilename}"):
+"""
+${materiText}
+"""
+
+ATURAN WAJIB:
+1. Buat soal HANYA dari materi kuliah di atas. JANGAN PERNAH membuat soal di luar cakupan materi tersebut, meskipun dosen meminta topik lain yang tidak ada di dalam materi.
+2. Selain membaca materinya, Anda boleh MENCARI SECARA LUAS: gunakan pengetahuan umum Anda yang masih RELEVAN dengan topik materi supaya soal lebih kaya, kontekstual, dan up-to-date. Tetap jangan keluar dari topik materi.
+3. Buat soal secara MENDALAM: gunakan keterampilan berpikir tingkat tinggi (aplikasi, analisis, sintesis, evaluasi), bukan sekadar hafalan. Capai poin-poin penting dan konsep inti yang ada di materi.
+4. Judul, deskripsi, dan setiap indikator penilaian harus mencerminkan isi materi yang diunggah.`;
+}
+
+export async function generateSoalDraft(payload: GenerateSoalRequest): Promise<{ reply: string; draft: SoalDraftResult }> {
+  const system = buildSoalSystem(payload.materiText, payload.materiFilename);
 
   const conversationContext = formatHistory(payload.history);
   const prompt = `Riwayat percakapan sebelumnya:\n${conversationContext}\n\nPermintaan terbaru dosen: ${payload.prompt}`;
@@ -192,7 +227,10 @@ ${JSON.stringify(soalSchema)}`;
     }));
   }
 
-  const reply = `Berikut draf soal "${draft.judul}" dengan ${draft.indikator.length} indikator penilaian. Silakan periksa, lalu klik "Gunakan draf ini di form" kalau sudah sesuai.`;
+  const withMateri = payload.materiText && payload.materiText.trim().length > 0;
+  const reply = withMateri
+    ? `Karena Anda telah mengunggah materi "${payload.materiFilename}", saya susun draf soal yang MENDALAM dan HANYA dari materi tersebut (${draft.indikator.length} indikator penilaian). Silakan periksa, lalu klik "Gunakan draf ini di form" kalau sudah sesuai.`
+    : `Berikut draf soal "${draft.judul}" dengan ${draft.indikator.length} indikator penilaian. Silakan periksa, lalu klik "Gunakan draf ini di form" kalau sudah sesuai.`;
 
   return { reply, draft };
 }

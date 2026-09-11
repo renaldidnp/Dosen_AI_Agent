@@ -36,7 +36,11 @@ export async function POST(
       return NextResponse.json({ error: "Nama, NIM, dan email wajib diisi." }, { status: 400 });
     }
 
-    if (!(file instanceof File)) {
+    // Tidak pakai `instanceof File` — global `File` tidak tersedia di runtime
+    // Node.js 18 (hanya buffer.File experimental). Cek struktur cukup (duck-typing):
+    // nilai dari form.get("file") selalu merupakan file object yang punya
+    // `size`, `name`, dan `arrayBuffer()`.
+    if (!file || typeof file !== "object" || typeof file.size !== "number" || typeof file.name !== "string") {
       return NextResponse.json({ error: "File jawaban (PDF) wajib diunggah." }, { status: 400 });
     }
 

@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ArrowLeft, Bot, Loader2, Plus, Send, Sparkles, Trash2, User, Wand2, X } from "lucide-react";
+import { uid } from "@/lib/uid";
 
 type IndikatorInput = { nama: string; bobot: number; rubrik: string; skorMax: number };
 type ChatRole = "user" | "assistant";
@@ -104,7 +105,7 @@ async function handleSubmit() {
     const prompt = chatInput.trim();
     if (!prompt || isThinking) return;
 
-    const userMsg: ChatMessage = { id: crypto.randomUUID(), role: "user", content: prompt };
+    const userMsg: ChatMessage = { id: uid(), role: "user", content: prompt };
     setMessages((prev) => [...prev, userMsg]);
     setChatInput("");
     setIsThinking(true);
@@ -121,7 +122,7 @@ async function handleSubmit() {
 
       const data = await res.json();
       const assistantMsg: ChatMessage = {
-        id: crypto.randomUUID(),
+        id: uid(),
         role: "assistant",
         content: data.reply ?? "Berikut draf soal yang saya susun berdasarkan permintaan Anda.",
         draft: data.draft,
@@ -131,7 +132,7 @@ async function handleSubmit() {
       setMessages((prev) => [
         ...prev,
         {
-          id: crypto.randomUUID(),
+          id: uid(),
           role: "assistant",
           content: "Maaf, terjadi kendala saat menghubungi AI agent. Coba lagi sebentar lagi.",
         },

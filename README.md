@@ -314,4 +314,4 @@ MIT License
 
 ---
 
-Dibuat untuk membantu dosen Indonesia dalam mengotomasi proses penilaian mahasiswa.
+Dibuat untuk membantu dosen Indonesia dalam mengotomasi proses penilaian mahasiswaa

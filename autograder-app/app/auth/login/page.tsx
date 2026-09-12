@@ -67,10 +67,10 @@ export default function LoginPage() {
 
   return (
     <div
-      className={`${display.variable} h-dvh w-full bg-[var(--bg)] relative overflow-x-hidden flex items-center justify-center px-4 py-8 sm:px-6 sm:py-12 ${LANDSCAPE_Q}:py-4 ${LANDSCAPE_Q}:items-start font-sans transition-colors duration-300`}
+      className={`${display.variable} min-h-screen w-full bg-[var(--bg)] relative overflow-x-hidden flex items-center justify-center px-4 py-8 sm:px-6 sm:py-12 ${LANDSCAPE_Q}:py-4 ${LANDSCAPE_Q}:items-start font-sans transition-colors duration-300`}
     >
-      {/* Subtle background accent */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {/* Subtle background accent, fixed so it doesn't re-render on scroll */}
+      <div className="fixed inset-0 pointer-events-none transform-gpu overflow-hidden">
         <div
           className="absolute -top-24 left-1/2 -translate-x-1/2 w-[560px] h-[560px] rounded-full blur-3xl opacity-60"
           style={{ background: "var(--accent-soft)" }}
@@ -80,19 +80,21 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-[420px]">
         <Link
           href="/"
-          className={`flex items-center justify-center gap-2 mb-6 ${LANDSCAPE_Q}:mb-3 text-[var(--text)]`}
+          className={`flex items-center justify-center gap-2.5 mb-6 ${LANDSCAPE_Q}:mb-3 text-[var(--text)]`}
         >
-          <div className="h-8 w-8 rounded-full bg-[var(--accent)] flex items-center justify-center text-[var(--accent-fg)]">
-            <GraduationCap className="h-4 w-4" />
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 p-0.5 shadow-md shadow-blue-500/20 transition duration-300">
+            <div className="w-full h-full bg-[var(--bg-panel)] rounded-[10px] flex items-center justify-center">
+              <GraduationCap className="w-4 h-4 text-blue-400" />
+            </div>
           </div>
-          <span className="text-[15px]" style={{ fontFamily: "var(--font-display)" }}>
-            Swa<span className="text-[var(--accent-ink)]">KoreksiIn</span>
+          <span className="font-heading font-bold text-base tracking-tight text-[var(--text)]">
+            SwaKoreksi<span className="text-blue-500">In</span>
           </span>
         </Link>
 
         {/* Panel */}
         <div
-          className={`relative bg-[var(--bg-panel)] border border-[var(--border-soft)] rounded-3xl p-6 sm:p-8 ${LANDSCAPE_Q}:p-5 shadow-xl transition-colors duration-300`}
+          className={`relative bg-[var(--bg-panel)] border border-[var(--border-soft)] rounded-3xl p-6 sm:p-8 ${LANDSCAPE_Q}:p-5 shadow-xl transition-colors duration-300 transform-gpu`}
         >
           {/* Header */}
           <div className={`mb-7 ${LANDSCAPE_Q}:mb-4 text-center`}>

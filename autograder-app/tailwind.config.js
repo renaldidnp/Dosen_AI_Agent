@@ -43,9 +43,9 @@ module.exports = {
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'float': 'float 6s ease-in-out infinite',
         'glow-scan': 'scanline 8s linear infinite',
-        'robot-float': 'robotFloat 6s ease-in-out infinite',
-        'radar-spin': 'radarSpin 16s linear infinite',
-        'pulse-glow': 'pulseGlow 4s ease-in-out infinite',
+        'robot-float': 'robotFloat 5s ease-in-out infinite',
+        'radar-spin': 'radarSpin 20s linear infinite',
+        'pulse-glow': 'pulseGlow 3.5s ease-in-out infinite',
       },
       keyframes: {
         float: {

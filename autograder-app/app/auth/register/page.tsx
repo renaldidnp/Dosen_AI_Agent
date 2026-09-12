@@ -87,11 +87,11 @@ export default function RegisterPage() {
     window.location.href = "/api/auth/google";
   }
 
-  const inputClass = `w-full bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-soft)] rounded-xl pl-10 pr-3 py-2.5 ${LANDSCAPE_Q}:py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] outline-none transition-colors`;
+  const inputClass = `w-full bg-[var(--bg)] border border-[var(--border)] focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-soft)] rounded-xl pl-10 pr-3 py-2.5 ${LANDSCAPE_Q}:py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-faint)] outline-none transition-all`;
 
   return (
     <div
-      className={`${display.variable} min-h-screen w-full bg-[var(--bg)] relative overflow-x-hidden flex items-center justify-center px-4 py-8 sm:px-6 sm:py-12 ${LANDSCAPE_Q}:py-4 ${LANDSCAPE_Q}:items-start font-sans`}
+      className={`${display.variable} min-h-screen w-full bg-[var(--bg)] relative overflow-x-hidden flex items-center justify-center px-4 py-8 sm:px-6 sm:py-12 ${LANDSCAPE_Q}:py-4 ${LANDSCAPE_Q}:items-start font-sans transition-colors duration-300`}
     >
       {/* Subtle background accent, fixed so it doesn't re-render on scroll */}
       <div className="fixed inset-0 pointer-events-none transform-gpu overflow-hidden">
@@ -104,13 +104,15 @@ export default function RegisterPage() {
       <div className={`relative z-10 w-full max-w-[440px] ${LANDSCAPE_Q}:max-w-[580px]`}>
         <Link
           href="/"
-          className={`flex items-center justify-center gap-2 mb-6 ${LANDSCAPE_Q}:mb-3 text-[var(--text)]`}
+          className={`flex items-center justify-center gap-2.5 mb-6 ${LANDSCAPE_Q}:mb-3 text-[var(--text)]`}
         >
-          <div className="h-8 w-8 rounded-full bg-[var(--accent)] flex items-center justify-center text-[var(--accent-fg)]">
-            <GraduationCap className="h-4 w-4" />
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 p-0.5 shadow-md shadow-blue-500/20 transition duration-300">
+            <div className="w-full h-full bg-[var(--bg-panel)] rounded-[10px] flex items-center justify-center">
+              <GraduationCap className="w-4 h-4 text-blue-400" />
+            </div>
           </div>
-          <span className="text-[15px]" style={{ fontFamily: "var(--font-display)" }}>
-            Swa<span className="text-[var(--accent-ink)]">KoreksiIn</span>
+          <span className="font-heading font-bold text-base tracking-tight text-[var(--text)]">
+            SwaKoreksi<span className="text-blue-500">In</span>
           </span>
         </Link>
 
@@ -250,7 +252,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className={`mt-2 ${LANDSCAPE_Q}:mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] text-[var(--accent-fg)] text-sm font-medium px-4 py-3 ${LANDSCAPE_Q}:py-2 hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm`}
+              className={`mt-2 ${LANDSCAPE_Q}:mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] text-[var(--accent-fg)] text-sm font-medium px-4 py-3 ${LANDSCAPE_Q}:py-2 hover:bg-[var(--accent-hover)] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm`}
             >
               {loading ? (
                 <>
@@ -275,7 +277,7 @@ export default function RegisterPage() {
             type="button"
             onClick={handleGoogleRegister}
             disabled={googleLoading}
-            className={`w-full inline-flex items-center justify-center gap-2.5 rounded-full border border-[var(--border)] text-[var(--text)] text-sm px-4 py-3 ${LANDSCAPE_Q}:py-2 hover:border-[var(--border-strong)] hover:bg-[var(--border-soft)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`w-full inline-flex items-center justify-center gap-2.5 rounded-full border border-[var(--border)] text-[var(--text)] text-sm px-4 py-3 ${LANDSCAPE_Q}:py-2 hover:border-[var(--border-strong)] hover:bg-[var(--border-soft)] transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {googleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleIcon />}
             Daftar dengan Google

@@ -13,12 +13,12 @@ import {
   ArrowRight,
   Play,
   CheckCircle2,
-  Sun,
+Sun,
   Moon,
-  GraduationCap,
   Menu,
   X,
   LogIn,
+  GraduationCap,
 } from "lucide-react";
 import { useTheme } from "./theme-provider";
 
@@ -150,17 +150,21 @@ function RobotVisual() {
     let curTX = 0;
     let curTY = 0;
 
-    const zone = document.getElementById("hero-interactive-zone");
+    const heroZone = document.getElementById("hero-interactive-zone");
 
     function onMove(e: MouseEvent) {
-      if (!zone) return;
-      const rect = zone.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width - 0.5;
-      const y = (e.clientY - rect.top) / rect.height - 0.5;
-      targetRY = x * 18;
-      targetRX = -y * 14;
-      targetTX = x * 22;
-      targetTY = y * 16;
+      if (!heroZone) return;
+      const rect = heroZone.getBoundingClientRect();
+      const x = (e.clientX - (rect.left + rect.width / 2)) / (window.innerWidth / 2);
+      const y = (e.clientY - (rect.top + rect.height / 2)) / (window.innerHeight / 2);
+
+      const clampedX = Math.max(-1, Math.min(1, x));
+      const clampedY = Math.max(-1, Math.min(1, y));
+
+      targetRY = clampedX * 22;
+      targetRX = -clampedY * 16;
+      targetTX = clampedX * 20;
+      targetTY = clampedY * 16;
     }
 
     function onLeave() {
@@ -176,65 +180,42 @@ function RobotVisual() {
       curTX += (targetTX - curTX) * 0.08;
       curTY += (targetTY - curTY) * 0.08;
       if (wrapperRef.current) {
-        wrapperRef.current.style.transform = `perspective(800px) translate3d(${curTX}px, ${curTY}px, 0px) rotateX(${curRX}deg) rotateY(${curRY}deg)`;
+        wrapperRef.current.style.transform = `perspective(1000px) translate3d(${curTX}px, ${curTY}px, 0px) rotateX(${curRX}deg) rotateY(${curRY}deg)`;
       }
       raf = requestAnimationFrame(loop);
     }
 
-    zone?.addEventListener("mousemove", onMove);
-    zone?.addEventListener("mouseleave", onLeave);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseleave", onLeave);
     raf = requestAnimationFrame(loop);
 
     return () => {
-      zone?.removeEventListener("mousemove", onMove);
-      zone?.removeEventListener("mouseleave", onLeave);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseleave", onLeave);
       cancelAnimationFrame(raf);
     };
   }, []);
 
   return (
-    <div className="relative w-full max-w-[440px] h-[420px] sm:h-[450px] flex items-center justify-center select-none">
-      {/* Multi-layered holographic ambient glow & orbital rings */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] rounded-full bg-gradient-to-tr from-blue-600/30 via-cyan-400/25 to-indigo-500/20 blur-3xl animate-pulse-glow" />
-        <div className="absolute w-[300px] h-[300px] sm:w-[350px] sm:h-[350px] rounded-full border border-cyan-400/20 border-dashed animate-radar-spin" />
-        <div className="absolute w-[250px] h-[250px] sm:w-[290px] sm:h-[290px] rounded-full border border-blue-500/20 opacity-75" />
-        <div className="absolute w-64 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent top-1/3 animate-pulse" />
-      </div>
-
-      {/* Robot element — background-free, float + parallax */}
+    <div
+      id="robot-container"
+      className="relative w-full max-w-[460px] h-[480px] sm:h-[510px] flex items-center justify-center select-none"
+      style={{ perspective: "1100px" }}
+    >
+      {/* The Robot Element: background eliminated via blend & radial mask,
+          gentle float + interactive 3D parallax tilt */}
       <div
         ref={wrapperRef}
-        className="relative w-full h-full flex items-center justify-center transition-transform duration-200 ease-out will-change-transform"
         id="robot-interactive-wrapper"
+        className="relative w-full h-full flex items-center justify-center transition-transform duration-150 ease-out will-change-transform"
+        style={{ transformStyle: "preserve-3d" }}
       >
         <div className="relative w-full h-full flex items-center justify-center animate-robot-float">
           <img
-            alt="SwaKoreksiIn AI Multi-Agent Autonomous Assessor Robot"
-            className="robot-cutout-layer w-full h-full object-contain pointer-events-none max-h-[440px] drop-shadow-[0_15px_35px_rgba(6,182,212,0.35)]"
-            src="https://lh3.googleusercontent.com/aida/AEtjO1Wb38YtwdsFCvami04R3Pba4fn4ZmzlibsJxDwHjHLO_NJb0gYTmbbT4kOyJZW6mHUR7dgTVo4JARP4P-TsqPy6eQ9fsIvSpqdGEwLvZN22PEiAXEuPTNQqroZ8n6qLHl3LXxlAHYlQp5WaMyjaeV50R-Fjzff3nd-gUmcKKogABX1E9Tf0fE3X80i0vq1IeDbz-qrXIPm0jp6pa7MRaUqjze8cxcIj66MJr9Z-qnJ5l7rkb-pD1f77DPw"
+            alt="SwaKoreksiIn AI Professor Robot Mascot"
+            className="robot-agent-cutout w-full h-full object-contain pointer-events-none max-h-[470px] sm:max-h-[500px] drop-shadow-sm"
+            src="/images/icon.png"
           />
-
-          {/* Floating holographic metric chips */}
-          <div
-            className="absolute -top-1 right-2 sm:right-6 glass-panel px-3 py-1.5 rounded-xl border border-cyan-500/40 shadow-lg shadow-cyan-500/10 flex items-center gap-2 animate-float pointer-events-none"
-            style={{ animationDelay: "1s" }}
-          >
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-            <span className="text-[11px] font-mono font-semibold text-cyan-300">Dual-Pass AI Active</span>
-          </div>
-          <div
-            className="absolute bottom-4 left-2 sm:left-4 glass-panel px-3 py-1.5 rounded-xl border border-blue-500/40 shadow-lg shadow-blue-500/15 flex items-center gap-2 animate-float pointer-events-none"
-            style={{ animationDelay: "2.5s" }}
-          >
-            <div className="w-5 h-5 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-xs">
-              ✓
-            </div>
-            <div>
-              <div className="text-[10px] text-[var(--text-muted)] font-mono">Rubric Confidence</div>
-              <div className="text-xs font-bold text-blue-400 font-mono">99.8% Alignment</div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -285,7 +266,6 @@ export default function LandingPage() {
 
             {/* Right Actions */}
             <div className="flex items-center gap-3 shrink-0">
-
               <button
                 aria-label="Ganti Tema (Dark / Light)"
                 onClick={toggleTheme}
@@ -295,10 +275,18 @@ export default function LandingPage() {
               </button>
               <Link
                 href="/auth/login"
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--text-muted)] hover:text-blue-400 border border-[var(--border)] hover:border-blue-500/40 hover:bg-[var(--accent-soft)] transition"
+                className="hidden md:inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition shadow-md shadow-blue-600/25"
               >
                 Masuk
               </Link>
+              <Link
+                href="/auth/register"
+                className="hidden md:inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition shadow-md shadow-blue-600/25"
+              >
+                Daftar
+              </Link>
+
+              {/* Mobile Menu Toggle */}
 
               {/* Mobile Menu Toggle */}
               <button
@@ -381,11 +369,10 @@ export default function LandingPage() {
                       href="/auth/register"
                       className="w-full sm:w-auto inline-flex justify-center items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/20 border border-blue-300/40 transition-all transform hover:-translate-y-0.5"
                     >
-                      Daftar Sekarang
-                      <ArrowRight className="w-4 h-4" />
+                      Mulai Sekarang
                     </Link>
                     <a
-                      href="#alur-kerja"
+                      href="#arsitektur"
                       className="w-full sm:w-auto inline-flex justify-center items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium text-[var(--text)] glass-panel hover:bg-[var(--accent-soft)] transition border border-[var(--border)]"
                     >
                       <Play className="w-4 h-4 text-blue-400" />
@@ -782,12 +769,11 @@ export default function LandingPage() {
                     href="/auth/register"
                     className="w-full sm:w-auto inline-flex justify-center items-center gap-2.5 px-6 py-3 rounded-xl font-semibold text-sm text-white bg-blue-600 hover:bg-blue-500 transition shadow-md shadow-blue-600/30 border border-blue-400/30 transform hover:-translate-y-0.5"
                   >
-                    Daftar Sekarang
-                    <ArrowRight className="w-4 h-4" />
+                    Mulai Sekarang
                   </Link>
                   <a
                     href="#alur-kerja"
-                    className="w-full sm:w-auto px-6 py-3 rounded-xl font-medium text-sm text-slate-200 glass-panel hover:bg-white/10 transition border border-white/20"
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl font-medium text-sm text-[var(--text)] glass-panel hover:bg-[var(--accent-soft)] transition border border-[var(--border)]"
                   >
                     Jadwalkan Demo Kampus
                   </a>

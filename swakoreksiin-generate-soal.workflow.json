@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "SwaKoreksiIn \u2014 Generate Soal AI dari Materi",
+    "subtitle": "materi PDF \u00b7 draf soal 2-pass \u00b7 indikator \u00b7 PDF ke Drive",
+    "output": "swakoreksiin-generate-soal.workflow.html",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "v-materi", "label": "Unggah materi", "focus": ["upload-materi", "validasi-materi"], "note": "Dosen mengunggah PDF materi; validasi stateless per-request tanpa menyimpan file." },
+      { "id": "v-generate", "label": "AI menyusun draf", "focus": ["kirim-generate", "agent-proses", "gemini-tulis"], "note": "Agent meneruskan prompt; Gemini menulis draf soal+indikator; failover berurutan bila error/timeout." },
+      { "id": "v-publish", "label": "Simpan & publikasi", "focus": ["simpan-draft", "buat-pdf", "upload-drive"], "note": "Draf & indikator tersimpan, PDF soal dibuat, lalu di-upload ke Google Drive." }
+    ]
+  },
+  "lanes": [
+    { "id": "dosen", "label": "Dosen" },
+    { "id": "app", "label": "App API :3000", "variant": "emphasis" },
+    { "id": "agent", "label": "Autograder Agent :4000", "variant": "emphasis" },
+    { "id": "ai", "label": "Gemini AI", "variant": "emphasis" }
+  ],
+  "phases": [
+    { "id": "p-materi", "label": "Persiapan materi", "fromCol": 0, "toCol": 1 },
+    { "id": "p-ai", "label": "Generate AI", "fromCol": 2, "toCol": 4, "variant": "security" },
+    { "id": "p-simpan", "label": "Simpan & terbitkan", "fromCol": 5, "toCol": 7, "variant": "dashed" }
+  ],
+  "mainPath": ["upload-materi", "validasi-materi", "kirim-generate", "agent-proses", "gemini-tulis", "simpan-draft", "buat-pdf", "upload-drive"],
+  "nodes": [
+    { "id": "upload-materi", "lane": "dosen", "col": 0, "type": "frontend", "label": "Unggah materi PDF", "sublabel": "silabus + bahan ajar" },
+    { "id": "validasi-materi", "lane": "app", "col":  Pavlof0, "type": "backend", "label": "Validasi stateless", "sublabel": "cek PDF per-request" },
+    { "id": "kirim-generate", "lane": "app", "col": 2, "type": "backend", "label": "POST /generate-soal", "sublabel": "AGENT_API_URL", "variant": "emphasis", "tag": "api" },
+    { "id": "agent-proses", "lane": "agent", "col": 3, "type": "backend", "label": "Agent: susun draf", "sublabel": "prompt LLM", "variant": "emphasis", "tag": "ai" },
+    { "id": "gemini-tulis", "lane": "ai", "col": 4, "type": "cloud", "label": "Gemini tulis draf", "sublabel": "soal + indikator", "variant": "emphasis", "tag": "ai" },
+    { "id": "simpan-draft", "lane": "app", "col": 5, "type": "database", "label": "Simpan draft soal", "sublabel": "MySQL · indikator" },
+    { "id": "buat-pdf", "lane": "app", "col": 6, "type": "backend", "label": "Generate PDF soal", "sublabel": "PDFKit + font" },
+    { "id": "upload-drive", "lane": "app", "col": 7, "type": "cloud", "label": "Upload ke Drive", "sublabel": "pdfUrl · link submit", "variant": "emphasis", "tag": "drive" }
+  ],
+  "edges": [
+    { "id": "e01", "from": "upload-materi", "to": "validasi-materi", "label": "PDF materi", "fromSide": "bottom", "toSide": "top" },
+    { "id": "e02", "from": "validasi-materi", "to": "kirim-generate", "label": "valid", "fromSide": "right", "toSide": "left", "variant": "emphasis" },
+    { "id": "e03", "from": "kirim-generate", "to": "agent-proses", "label": "base64 chunked", "fromSide": "bottom", "toSide": "top", "variant": "emphasis" },
+    { "id": "e04", "from": "agent-proses", "to": "gemini-tulis", "label": "prompt generate", "fromSide": "right", "toSide": "left", "variant": "emphasis" },
+    { "id": "e05", "from": "gemini-tulis", "to": "simpan-draft", "label": "draf soal + indikator", "fromSide": "bottom", "toSide": "bottom", "variant": "return" },
+    { "id": "e06", "from": "simpan-draft", "to": "buat-pdf", "label": "draf tersimpan", "fromSide": "right", "toSide": "left" },
+    { "id": "e07", "from": "buat-pdf", "to": "upload-drive", "label": "PDF soal", "fromSide": "right", "toSide": "left", "variant": "emphasis" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Stateless & aman", "items": ["Materi PDF dikirim per-request, tidak tersimpan lama", "Auto-clear setelah selesai diproses", "Umpan draft bisa diulang tanpa efek samping"] },
+    { "dot": "violet", "title": "AI menulis 2-pass", "items": ["Pass 1 \u2014 Gemini menulis draf soal per indikator", "Pass 2 \u2014 Peninjau meninjau konsistensi draf", "Failover ke OpenRouter \u2192 Groq bila gagal"] },
+    { "dot": "emerald", "title": "Langsung siap ajar", "items": ["Draf + indikator tersimpan persisten", "PDF soal otomatis dibuat & di-upload ke Drive", "Link submit langsung aktif untuk kelas"] }
+  ]
+}

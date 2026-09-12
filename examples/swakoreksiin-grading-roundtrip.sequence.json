@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "SwaKoreksiIn \u2014 Alur Grading AI 2-Pass",
+    "output": "examples/swakoreksiin-grading-roundtrip.sequence.html",
+    "viewBox": [820, 920],
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "accept-submit", "label": "Terima jawaban", "focus": ["mahasiswa", "app", "store"], "note": "App menerima PDF dan langsung menyimpan status dikumpulkan." },
+      { "id": "ai-2pass", "label": "AI menilai 2-pass", "focus": ["app", "agent", "gemini"], "note": "Penilai (pass1) menilai, Peninjau (pass2) mengecek ulang demi konsistensi." },
+      { "id": "callback-notify", "label": "Callback & kirim hasil", "focus": ["agent", "app", "store", "resend", "mahasiswa"], "note": "Webhook callback mengunci status selesai lalu email hasil terkirim." }
+    ]
+  },
+  "participants": [
+    { "id": "mahasiswa", "type": "external", "label": "Mahasiswa", "sublabel": "browser" },
+    { "id": "app", "type": "frontend", "label": "App", "sublabel": "Next.js :3000" },
+    { "id": "store", "type": "database", "label": "MySQL", "sublabel": "submission" },
+    { "id": "agent", "type": "backend", "label": "Agent AI", "sublabel": "Express :4000" },
+    { "id": "gemini", "type": "cloud", "label": "Gemini", "sublabel": "gemini-3.6-flash" },
+    { "id": "resend", "type": "external", "label": "Resend", "sublabel": "email" }
+  ],
+  "segments": [
+    { "from": 100, "to": 340, "label": "Submit" },
+    { "from": 360, "to": 620, "label": "Grading AI 2-pass" },
+    { "from": 640, "to": 900, "label": "Callback + notif" }
+  ],
+  "messages": [
+    { "from": "mahasiswa", "to": "app", "y": 170, "label": "POST /api/submit/[token]", "variant": "emphasis" },
+    { "from": "app", "to": "store", "y": 224, "label": "simpan submission", "variant": "emphasis" },
+    { "from": "app", "to": "mahasiswa", "y": 268, "label": "201 diterima", "variant": "return" },
+    { "from": "app", "to": "agent", "y": 350, "label": "POST /grade", "variant": "emphasis" },
+    { "from": "agent", "to": "gemini", "y": 410, "label": "pass1 \u2014 Penilai", "variant": "emphasis" },
+    { "from": "gemini", "to": "agent", "y": 452, "label": "skor pass1", "variant": "return" },
+    { "from": "agent", "to": "gemini", "y": 508, "label": "pass2 \u2014 Peninjau", "variant": "emphasis" },
+    { "from": "gemini", "to": "agent", "y": 550, "label": "skor pass2", "variant": "return" },
+    { "from": "agent", "to": "app", "y": 636, "label": "webhook grade-callback", "variant": "dashed" },
+    { "from": "app", "to": "store", "y": 700, "label": "status selesai + skor", "variant": "emphasis" },
+    { "from": "app", "to": "resend", "y": 760, "label": "email hasil", "variant": "dashed" },
+    { "from": "resend", "to": "mahasiswa", "y": 810, "label": "hasil terkirim", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "app", "from": 160, "to": 316, "type": "backend" },
+    { "participant": "agent", "from": 342, "to": 612, "type": "backend" },
+    { "participant": "agent", "from": 620, "to": 665, "type": "messagebus" },
+    { "participant": "app", "from": 665, "to": 908, "type": "backend" },
+    { "participant": "store", "from": 216, "to": 724, "type": "database" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Terima tanpa blokir", "items": ["PDF jawaban disimpan status dikumpulkan", "Mahasiswa mendapat 201 secepatnya", "Pekerjaan grading berjalan di background"] },
+    { "dot": "violet", "title": "Grading 2-pass", "items": ["pass1: Agent Penilai menilai per indikator", "pass2: Agent Peninjau meninjau ulang", "Hasil kedua pass dipertemukan demi konsistensi"] },
+    { "dot": "emerald", "title": "Konsistensi akhir", "items": ["Webhook callback mengunci status selesai", "Skor persisten sebelum notifikasi", "Email hasil dikirim ke mahasiswa"] }
+  ]
+}

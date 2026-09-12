@@ -273,9 +273,9 @@ export default function LandingPage() {
               >
                 {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
-              <Link
+<Link
                 href="/auth/login"
-                className="hidden md:inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition shadow-md shadow-blue-600/25"
+                className="hidden md:inline-flex items-center justify-center px-4 py-2 rounded-full border border-[var(--accent-border)] text-xs font-semibold text-[var(--text)] hover:text-[var(--accent-ink)] hover:bg-[var(--accent-soft)] transition"
               >
                 Masuk
               </Link>
@@ -285,8 +285,6 @@ export default function LandingPage() {
               >
                 Daftar
               </Link>
-
-              {/* Mobile Menu Toggle */}
 
               {/* Mobile Menu Toggle */}
               <button

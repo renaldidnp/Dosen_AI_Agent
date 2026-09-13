@@ -131,7 +131,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="w-full px-4 sm:px-6 lg:px-8 pb-16 max-w-[900px] mx-auto py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 pb-16 max-w-[1600px] mx-auto py-8">
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" />
         </div>
@@ -140,7 +140,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 pb-16 max-w-[900px] mx-auto">
+    <div className="w-full px-4 sm:px-6 lg:px-8 pb-16 max-w-[1600px] mx-auto">
       {/* Header */}
       <div className="py-4 mb-6">
         <h1 className="font-heading text-2xl lg:text-3xl font-bold text-[var(--text)] tracking-tight">

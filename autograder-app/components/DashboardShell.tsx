@@ -11,7 +11,7 @@ import {
   HelpCircle,
   Sun,
   Moon,
-  Sparkles,
+  GraduationCap,
   ChevronDown,
   LogOut,
   Loader2,
@@ -132,20 +132,14 @@ export default function DashboardShell({
         {/* Brand */}
         <div className="h-16 sm:h-20 px-5 sm:px-6 flex items-center justify-between gap-3 border-b border-[var(--border-soft)] shrink-0">
           <div className="flex items-center gap-3 min-w-0">
-              <div
-                className="
-                  h-9 w-9 rounded-xl
-                  bg-[var(--accent)]
-                  text-[var(--accent-fg)]
-                  flex items-center justify-center
-                  shrink-0 shadow-sm
-                "
-              >
-                <Sparkles className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 p-0.5 shadow-md shadow-blue-500/20 shrink-0">
+                <div className="w-full h-full bg-[var(--bg-panel)] rounded-[10px] flex items-center justify-center">
+                  <GraduationCap className="w-5 h-5 text-blue-400 shrink-0" />
+                </div>
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="font-heading font-bold text-lg text-[var(--accent-ink)] tracking-tight leading-none truncate">
-                  SwaKoreksiIn
+                <span className="font-heading font-bold text-lg text-[var(--text)] tracking-tight leading-none truncate">
+                  SwaKoreksi<span className="text-blue-500">In</span>
                 </span>
                 <span className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-wider mt-1">
                   Portal Pengampu

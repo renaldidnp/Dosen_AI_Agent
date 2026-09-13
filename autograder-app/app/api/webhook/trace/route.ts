@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { upsertTrace } from "@/lib/grading-trace";
 
 // Endpoint untuk Agent melaporkan progres langkah grading (live trace).
 // Dipanggil fire-and-forget oleh agent; kegagalan di sini tidak boleh
@@ -35,16 +36,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Submission tidak ditemukan" }, { status: 404 });
     }
 
-    await db.gradingTrace.create({
-      data: {
-        submissionId: submission_id,
-        step,
-        status,
-        detail: typeof detail === "string" ? detail : null,
-        provider: typeof provider === "string" ? provider : null,
-        model: typeof model === "string" ? model : null,
-        durationMs: typeof duration_ms === "number" && Number.isFinite(duration_ms) ? Math.round(duration_ms) : null,
-      },
+    await upsertTrace(submission_id, step, {
+      status,
+      detail: typeof detail === "string" ? detail : null,
+      provider: typeof provider === "string" ? provider : null,
+      model: typeof model === "string" ? model : null,
+      durationMs: typeof duration_ms === "number" && Number.isFinite(duration_ms) ? duration_ms : null,
     });
 
     return NextResponse.json({ message: "Trace tercatat" });

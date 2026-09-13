@@ -134,6 +134,7 @@ export default function RealTimeLog({
         shadow-xs
         flex flex-col
         h-full
+        min-w-0
         transition-colors duration-300
         overflow-hidden
       "
@@ -187,7 +188,7 @@ export default function RealTimeLog({
 
                 <div className="min-w-0 flex-1 text-xs">
                   <div className="flex items-center justify-between gap-3 mb-0.5">
-                    <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-wide">
+                    <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-wide truncate min-w-0">
                       {entry.code}
                     </span>
 
@@ -202,13 +203,15 @@ export default function RealTimeLog({
                   </div>
 
                   <h3
-                    className={`text-sm font-semibold leading-snug ${entry.status === "done" ? "text-[var(--text-muted)]" : "text-[var(--text)]"
+                    className={`text-sm font-semibold leading-snug truncate ${entry.status === "done" ? "text-[var(--text-muted)]" : "text-[var(--text)]"
                       }`}
                   >
                     {entry.title}
                   </h3>
 
-                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{entry.detail}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5 line-clamp-2 break-words">
+                    {entry.detail}
+                  </p>
 
                   <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-faint)] mt-1">
                     <span>{entry.timeLabel}</span>

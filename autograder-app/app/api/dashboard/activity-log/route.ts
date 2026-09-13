@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
     const [traces, recentSubmissions] = await Promise.all([
       db.gradingTrace.findMany({
         orderBy: { createdAt: "desc" },
-        take: 20,
+        take: 40,
         include: {
           submission: {
             select: { id: true, namaMahasiswa: true, status: true, soal: { select: { judul: true } }, hasilKoreksi: { select: { emailTerkirim: true, skorTotal: true } } },
@@ -74,11 +74,32 @@ export async function GET(req: NextRequest) {
 
     const tracedSubmissionIds = new Set(traces.map((t) => t.submission.id));
 
-    // Entri berbasis trace asli
-    const traceEntries = traces.map((t) => {
+    // Entri berbasis trace asli — satu baris per (submission, step).
+    // Trace dipakai yang terbaru (list sudah urut createdAt desc), jadi jika
+    // ada pasangan "running" + "done" untuk langkah yang sama, yang tampil
+    // hanya state terakhir (done/error) dengan durasi & detail terkini.
+    const traceByIdentity = new Map<
+      string,
+      {
+        id: string;
+        code: string;
+        status: "running" | "queued" | "done";
+        step: string;
+        title: string;
+        detail: string;
+        createdAt: string;
+        durationMs: number | null;
+      }
+    >();
+
+    for (const t of traces) {
       const meta = STEP_META[t.step] ?? STEP_META.error;
       const s = t.submission;
-      return {
+      const key = `${s.id}::${t.step}`;
+
+      if (traceByIdentity.has(key)) continue; // sudah ada baris lebih baru utk langkah ini
+
+      traceByIdentity.set(key, {
         id: t.id,
         code: meta.code,
         status: stepStatus(t.status),
@@ -87,8 +108,10 @@ export async function GET(req: NextRequest) {
         detail: t.detail ?? meta.detail,
         createdAt: t.createdAt.toISOString(),
         durationMs: t.durationMs,
-      };
-    });
+      });
+    }
+
+    const traceEntries = [...traceByIdentity.values()];
 
     // Fallback: submission yang belum punya trace sama sekali (mis. dari era
     // sebelum fitur ini), biar feed lama tidak 'hilang'.

@@ -303,11 +303,46 @@ export default function SoalGrid({
     }
   }
 
+  async function copyText(text: string): Promise<boolean> {
+    // Clipboard API butuh konteks aman (HTTPS/localhost). Di VPS yang masih
+    // http:// navigator.clipboard bisa undefined/gagal — fallback ke metode lama.
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        // lanjut ke fallback
+      }
+    }
+
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+
   async function copySubmitLink(soal: Soal) {
     const base = window.location.origin;
-    await navigator.clipboard.writeText(`${base}/submit/${soal.submitToken}`);
-    setCopiedId(soal.id);
-    setTimeout(() => setCopiedId(null), 2000);
+    const url = `${base}/submit/${soal.submitToken}`;
+
+    const ok = await copyText(url);
+
+    if (ok) {
+      setCopiedId(soal.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } else {
+      alert(`Salin otomatis gagal. Silakan salin manual:\n${url}`);
+    }
   }
 
   async function handleConfirmDelete() {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { triggerGrading } from "@/lib/agentClient";
+import { upsertTrace } from "@/lib/grading-trace";
 
 async function requireAuth(req: NextRequest) {
   const token = req.cookies.get("session_token")?.value;
@@ -65,13 +66,9 @@ export async function POST(req: NextRequest, { params }: { params: { submissionI
   });
 
   const tRegrade = Date.now();
-  await db.gradingTrace.create({
-    data: {
-      submissionId: submission.id,
-      step: "callback",
-      status: "running",
-      detail: `${auth.user.nama} meminta AI mengoreksi ulang: ${catatanTambahan}`,
-    },
+  await upsertTrace(submission.id, "callback", {
+    status: "running",
+    detail: `${auth.user.nama} meminta AI mengoreksi ulang: ${catatanTambahan}`,
   });
 
   try {
@@ -83,13 +80,9 @@ export async function POST(req: NextRequest, { params }: { params: { submissionI
     });
   } catch (err) {
     const pesan = err instanceof Error ? err.message : "Unknown error";
-    await db.gradingTrace.create({
-      data: {
-        submissionId: submission.id,
-        step: "error",
-        status: "error",
-        detail: `Gagal kirim ulang ke agent: ${pesan}`,
-      },
+    await upsertTrace(submission.id, "error", {
+      status: "error",
+      detail: `Gagal kirim ulang ke agent: ${pesan}`,
     });
     await db.hasilKoreksi.update({
       where: { submissionId: submission.id },
@@ -99,14 +92,10 @@ export async function POST(req: NextRequest, { params }: { params: { submissionI
     return NextResponse.json({ error: `Gagal memicu koreksi ulang: ${pesan}` }, { status: 502 });
   }
 
-  await db.gradingTrace.create({
-    data: {
-      submissionId: submission.id,
-      step: "callback",
-      status: "done",
-      detail: `Regrade dipicu, menunggu hasil AI`,
-      durationMs: Date.now() - tRegrade,
-    },
+  await upsertTrace(submission.id, "callback", {
+    status: "done",
+    detail: `Regrade dipicu, menunggu hasil AI`,
+    durationMs: Date.now() - tRegrade,
   });
 
   return NextResponse.json({ message: "Koreksi ulang dipicu, hasil baru akan dikirim setelah AI selesai" });

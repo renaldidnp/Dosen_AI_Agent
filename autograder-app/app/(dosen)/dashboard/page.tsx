@@ -175,8 +175,8 @@ export default async function DashboardPage() {
           /* =====================================================
              MODUL TERBARU — ringkasan singkat, detail di Bank Soal
           ===================================================== */
-          <div className="flex flex-col gap-4">
-            <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-4 min-w-0">
+            <div className="flex justify-between items-center gap-2">
               <h2 className="font-heading text-sm font-bold text-[var(--text)] flex items-center gap-2">
                 <FolderOpen className="w-4 h-4 text-[var(--accent)]" />
                 Modul Ujian Terbaru
